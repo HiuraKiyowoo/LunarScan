@@ -11,16 +11,21 @@ fi
 pkg update -y
 pkg install -y proot-distro git
 
-if ! proot-distro list --installed 2>/dev/null | grep -qi 'debian'; then
+if proot-distro login debian -- /bin/true >/dev/null 2>&1; then
+  echo "Debian proot sudah terpasang; memakai instalasi yang ada."
+else
   proot-distro install debian
 fi
 
 proot-distro login debian -- bash -lc '
 set -euo pipefail
-if [[ ! -d /root/xianscan-termux/.git ]]; then
+if [[ -d /root/xianscan-termux/.git ]]; then
+  git -C /root/xianscan-termux pull --ff-only
+elif [[ ! -e /root/xianscan-termux ]]; then
   git clone https://github.com/HiuraKiyowoo/xianscan-termux.git /root/xianscan-termux
 else
-  git -C /root/xianscan-termux pull --ff-only
+  echo "Path /root/xianscan-termux exists but is not a Git checkout; move it aside, then retry." >&2
+  exit 2
 fi
 bash /root/xianscan-termux/scripts/setup-termux-proot-debian.sh
 '
