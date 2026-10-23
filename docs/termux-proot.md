@@ -1,10 +1,50 @@
-# XianScan di Android/Termux
+# Panduan instalasi XianScan di Android/Termux
 
-> **Status port:** source Rust XianScan berhasil di-cross-check dan di-link sebagai ELF Android ARM64 menggunakan Android NDK. Skrip `scripts/build-android-termux.sh` menghasilkan **backend ML/API saja** (`--ml-only`), bukan paket aplikasi lengkap. Eksekusi binary, model, dan inferensi masih harus diuji di perangkat Android ARM64. Untuk UI web penuh, jalur eksperimen yang disiapkan adalah Debian lewat `proot-distro`.
+## Setup full app sekali saja
 
-## A. Backend native Termux (Android ARM64)
+Cara yang direkomendasikan menjalankan UI web dan backend bersama-sama di Debian ARM64 melalui `proot-distro`. Di Termux:
 
-Build dilakukan di Linux x86_64 dengan Rust stable dan Android NDK r27c (atau NDK kompatibel). Di checkout proyek:
+```sh
+pkg update -y
+pkg install -y git proot-distro
+git clone https://github.com/HiuraKiyowoo/xianscan-termux.git "$HOME/xianscan-termux"
+cd "$HOME/xianscan-termux"
+bash scripts/install-termux.sh
+```
+
+Installer akan memasang Debian, Rust, Node.js, dependency SvelteKit, membangun backend, dan mengunduh model ONNX. UI Vite dijalankan oleh launcher. Setup membutuhkan beberapa GB ruang kosong dan koneksi internet stabil. Model ONNX pada manifest total sekitar **403 MB**; build Rust/Node dan cache memerlukan ruang tambahan. Waktu setup tergantung perangkat, jadi jaga Termux tetap terbuka dan perangkat tidak masuk mode hemat daya.
+
+Untuk penggunaan berikutnya, di Termux jalankan:
+
+```sh
+bash "$HOME/xianscan-termux/scripts/start-termux.sh"
+```
+
+Lalu buka **http://127.0.0.1:8125** di browser Android. UI dan API hanya diakses lokal. Tekan `Ctrl+C` untuk berhenti. Jika port default sedang dipakai, coba `DEV_PORT=8126 bash "$HOME/xianscan-termux/scripts/start-termux.sh"`.
+
+Script setup dapat dijalankan ulang dari Termux jika pemasangan terputus:
+
+```sh
+proot-distro login debian -- bash -lc 'bash /root/xianscan-termux/scripts/setup-termux-proot-debian.sh'
+```
+
+## Gunakan NaraRouter untuk LLM terjemahan
+
+LLM penerjemah tidak harus lokal. Di studio web buka **Settings → AI Translation Providers → Custom (OpenAI-Compatible)**, lalu isi:
+
+- Base URL: `https://router.bynara.id/v1`
+- API key: token NaraRouter milikmu
+- Model: pilih/scan alias yang tersedia pada akun NaraRouter
+
+Tekan **Test Connection**, kemudian jadikan provider itu aktif. Format ini mengikuti [dokumentasi API NaraRouter](https://router.bynara.id/docs). Jangan tempel token ke chat atau commit ke GitHub; masukkan langsung pada Settings di browser lokal.
+
+Model ONNX tetap digunakan **secara lokal** untuk bagian pemrosesan gambar: deteksi teks/balon, OCR, dan inpainting. Ia bukan LLM penerjemah. Model yang diunduh saat ini berjumlah 7 dengan total sekitar 403 MB; dua yang terbesar adalah model deteksi (136 MB) dan inpainting (206 MB).
+
+## Backend native Android tanpa UI (opsional)
+
+Untuk eksperimen backend Rust native ARM64 saja, tersedia binary di `dist/termux-arm64/`. Binary ini tidak berisi Node, UI, atau model; jalankan `run-ml.sh` setelah menyiapkan bobot model. Port backend lokal default `8123`. Build Android ARM64 berhasil di Sandbox, tetapi runtime pada HP belum diuji. Untuk full UI, gunakan setup Debian proot di atas.
+
+Build ulang binary native dilakukan di Linux x86_64 dengan Rust stable dan Android NDK:
 
 ```sh
 rustup target add aarch64-linux-android
@@ -13,69 +53,10 @@ ANDROID_API_LEVEL=24 \
 ./scripts/build-android-termux.sh
 ```
 
-Hasil ada di `dist/termux-arm64/`: executable `xianscan`, `lib/libc++_shared.so`, runner `run-ml.sh`, dan catatan paket. Build ini tidak menyertakan Node/SvelteKit, UI, atau model ONNX.
+## Status dan diagnosis awal
 
-Salin seluruh direktori `dist/termux-arm64` ke **private home** Termux di ponsel ARM64, bukan ke `/sdcard` (filesystem berbagi bisa menghalangi eksekusi). Siapkan model ONNX di `$HOME/xianscan/models` sesuai `models/manifest.tsv`, kemudian:
-
-```sh
-cd ~/termux-arm64
-chmod +x xianscan run-ml.sh
-MODELS_DIR="$HOME/xianscan/models" ./run-ml.sh
-```
-
-Backend ML-only seharusnya mendengarkan di `127.0.0.1:8123`; ia tidak menyajikan studio web. Jalankan dengan Termux di foreground. Mulai dengan konfigurasi CPU bawaan (`ONNX_THREADS=2`, `PIPELINE_PAGE_CONCURRENCY=1`). Jika startup atau load model gagal, simpan log lengkap; jangan menganggap cross-link sebagai bukti runtime/inference berhasil.
-
-## B. UI web penuh lewat Debian proot-distro
-
-Jalur ini menjalankan Linux ARM64 userspace Debian di Android dan berusaha menghindari ketidakcocokan Node native addons dengan Android/bionic.
-
-Di Termux:
-
-```sh
-pkg update -y
-pkg install proot-distro -y
-proot-distro install debian
-proot-distro login debian
-```
-
-Semua langkah selanjutnya dijalankan **di dalam sesi Debian**.
-
-Pasang toolchain:
-
-```sh
-apt update
-apt install -y git curl ca-certificates build-essential python3 pkg-config libfontconfig1-dev unzip xz-utils
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-. "$HOME/.cargo/env"
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-. "$HOME/.bashrc"
-git clone https://github.com/ArbenApura/xianscan-rust.git /root/xianscan-rust
-cd /root/xianscan-rust
-nvm install
-corepack enable
-```
-
-Pastikan tersedia ruang kosong beberapa GB untuk models, Node dependencies, cache, dan build. RAM serta kecepatan CPU ponsel mempengaruhi kelayakan inferensi.
-
-Build dan jalankan mode development CPU:
-
-```sh
-cd /root/xianscan-rust
-. "$HOME/.cargo/env"
-cd web
-corepack yarn install
-cd ..
-bash scripts/fetch-models.sh
-MODELS_DIR="$PWD/models" MT_DEVICE=cpu ONNX_THREADS=2 PIPELINE_PAGE_CONCURRENCY=1 cargo run --release -- --dev
-```
-
-Buka `http://127.0.0.1:8125` di browser Android. Jika instalasi `better-sqlite3` atau `@napi-rs/canvas` gagal, jangan salin addon dari arsitektur/OS lain—perbaiki dependency di Debian ARM64.
-
-## C. Batasan dan tes wajib di ponsel
-
-- Rilis resmi yang ada bukan paket Android; jangan jalankan arsip Linux x86_64 pada ponsel ARM64.
-- Build native yang diuji di sandbox adalah Rust backend saja dengan target Android API 24 dan tanpa fitur akselerasi GPU. Belum diuji runtime langsung di Android, akses filesystem Termux, lifecycle proses, pemuatan model, atau respons inferensi.
-- Untuk backend native, tes di perangkat: `./run-ml.sh`, cek log startup dan port `8123`, health endpoint, lalu request analyze/inpaint menggunakan model dan gambar uji. Verifikasi restart dan lokasi database.
-- Untuk UI penuh proot, tes: buka studio dari browser Android, buat buku, muat gambar, jalankan OCR/inpainting, restart, dan pastikan database/cache bertahan.
-- Android dapat menghentikan Termux saat aplikasi di latar belakang atau dibatasi baterai; pertahankan Termux di foreground selama proses panjang.
-- Gunakan `127.0.0.1` untuk lokal. Jangan aktifkan akses LAN kecuali memang dibutuhkan dan token akses dijaga.
+- Full-stack proot menjalankan source Linux ARM64 di Debian, bukan native Android APK. Node native addons tidak dijalankan langsung di bionic Termux.
+- Setup dan cross-build berhasil divalidasi di Sandbox Linux; belum ada verifikasi langsung pada perangkat Android. Termux Android dapat menghentikan proses saat aplikasi masuk latar belakang, jadi pertahankan Termux di foreground.
+- Mulai dengan CPU (`ONNX_THREADS=2`, `PIPELINE_PAGE_CONCURRENCY=1`) dan halaman uji kecil. Pantau suhu serta penggunaan RAM.
+- Jika UI tidak terbuka, pastikan startup menampilkan port `8125`; akses `127.0.0.1` dan periksa apakah port sedang dipakai. Jika model gagal dimuat, cek log dan pastikan `bash scripts/fetch-models.sh` selesai tanpa error.
+- Setelah UI terbuka, uji koneksi NaraRouter dari Settings sebelum mulai menerjemahkan. OCR/inpainting tetap bergantung pada model lokal meskipun LLM memakai layanan cloud.
