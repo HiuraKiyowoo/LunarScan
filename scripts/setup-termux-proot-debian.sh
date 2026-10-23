@@ -36,7 +36,7 @@ else
 fi
 
 cd "$ROOT/web"
-yarn install --frozen-lockfile
+yarn install --frozen-lockfile --network-timeout 120000 --network-concurrency 4
 
 cd "$ROOT"
 echo "Mengunduh model ONNX (total manifest sekitar 403 MB)..."
