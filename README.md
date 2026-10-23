@@ -1,310 +1,98 @@
-<div align="center">
+# XianScan Termux — port eksperimental Android ARM64
 
-<img src="assets/icon.png" width="88" height="88" alt="XianScan Icon" style="border-radius: 16px;" />
+**Fork/port komunitas untuk menjalankan backend penerjemah komik XianScan di Termux.** Proyek ini berasal dari [ArbenApura/xianscan-rust](https://github.com/ArbenApura/xianscan-rust), yang dibuat oleh Arben Apura. Repo ini tidak resmi dan bukan proyek yang dikelola upstream.
 
-# XianScan
+> **Status saat ini:** backend Rust berhasil di-cross-build dan di-link untuk Android ARM64 menggunakan Android NDK. Paket native menjalankan **ML/API backend saja**. UI web dan proses Node belum menjadi bagian dari paket Android native. Eksekusi binary, model AI, dan inferensi tetap harus diuji langsung di HP Termux.
 
-**Local-first translation studio for manga, manhwa, and manhua.**
+XianScan memproses halaman manga, manhwa, dan manhua melalui deteksi teks, OCR, penerjemahan LLM, inpainting, dan typesetting. Port native Termux ini berfokus dahulu pada server Rust dan inferensi CPU.
 
-Speech bubble detection, multi-language OCR, LLM translation, neural inpainting, and typesetting built with Rust & ONNX Runtime.
+## Pilih cara menjalankan
 
-Documentation & Showcase: [**xianscan.arbenger.com**](https://xianscan.arbenger.com/)
+- **Backend native Termux (Android ARM64):** gunakan paket `dist/termux-arm64/` atau build sendiri. Tersedia endpoint backend lokal di port `8123`; **tidak ada UI web**.
+- **Aplikasi dengan UI web:** gunakan Debian melalui `proot-distro` dan ikuti [Panduan Android/Termux](docs/termux-proot.md). Ini jalur eksperimental Linux ARM64 di userspace Debian, bukan binary Android native.
 
-<br/>
+Jangan gunakan rilis Linux `x86_64` upstream pada ponsel Android `ARM64`.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Rust](https://img.shields.io/badge/Rust-1.88+-DEA584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-1.28-005CED?style=flat-square&logo=onnx&logoColor=white)](https://onnxruntime.ai/)
-[![Hardware](https://img.shields.io/badge/Hardware-DirectML_•_CoreML_•_CUDA_•_CPU-0078D4?style=flat-square&logo=windows&logoColor=white)](https://learn.microsoft.com/en-us/windows/ai/directml/)
-[![Web UI](https://img.shields.io/badge/Web_UI-SvelteKit-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://kit.svelte.dev/)
-[![Browser Extension](https://img.shields.io/badge/Extension-Chrome_•_Firefox_•_Edge-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](#browser-web-extension)
-[![Mobile Reader](https://img.shields.io/badge/Mobile-Mihon_•_Tachiyomi-2E7D32?style=flat-square&logo=android&logoColor=white)](#mihon--tachiyomi-extension-android)
-[![Support on Ko-Fi](https://img.shields.io/badge/Support_on-Ko--Fi-FF5E5B?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/arbenapura)
+## Instalasi backend native di Termux
 
-<br/>
+Paket prebuilt ARM64 tersedia pada folder [`dist/termux-arm64/`](dist/termux-arm64/). Untuk memasangnya di perangkat:
 
-| 1. Raw Source | 2. Neural Inpainted | 3. Translated & Typeset |
-| :---: | :---: | :---: |
-| <img src="docs/showcase/manhua_raw.jpg" width="260" alt="Original Raw Scan"/> | <img src="docs/showcase/manhua_cleaned.jpg" width="260" alt="Neural Inpainted Page"/> | <img src="docs/showcase/manhua_translated.jpg" width="260" alt="Translated and Typeset Page"/> |
+1. Clone repo ini di Termux. Repo sudah menyertakan paket prebuilt di `dist/termux-arm64/`:
 
-<sub><em>Showcase artwork from 《妖神记》 (Tales of Demons and Gods) used for technical demonstration. All copyrights belong to the respective authors and publishers.</em></sub>
-
-<br/>
-
-**Format Benchmarks:** &nbsp; [Chinese Manhua](docs/showcase-manhua.md) &nbsp;•&nbsp; [Korean Manhwa & Webtoons](docs/showcase-manhwa.md) &nbsp;•&nbsp; [Japanese Manga](docs/showcase-manga.md)
-
-<br/>
-
-</div>
-
-## Overview
-
-**XianScan** is a self-contained, local-first comic translation server built in Rust. It eliminates the manual busywork of screenshotting, external OCR, Photoshop cleaning, and manual typesetting by orchestrating the entire lifecycle in a single automated flow: from 1-click web reader import to streaming translated chapters directly to your mobile reader over local Wi-Fi.
-
-> [!TIP]
-> **Choosing the Right Tool for Your Workflow**
-> - **XianScan (Automated Reading Flow)**: Built specifically for readers and fast chapter catch-up. Delivers an automated 1-click pipeline (browser import -> OCR -> inpainting -> LLM translation -> typesetting -> Mihon streaming) packaged in a self-contained zero-install standalone binary.
-> - **Koharu (Comprehensive Translation Studio)**: If you need an end-to-end desktop editor with multi-format project management, proofreading, a WebGPU-based canvas for manual cleanup, and layered PSD export, check out [Koharu](https://github.com/mayocream/koharu).
-
-### Key Architectural Pillars
-- **Zero-Friction Standalone Executable**: Ships as a single self-contained binary containing all ONNX neural models, OCR dictionaries, Skia graphics rendering, and the SvelteKit web interface. No Python environment, Conda setups, or external runtime installations required.
-- **Automated End-to-End Pipeline**: Handles image downloading, high-resolution speech bubble detection, multi-language OCR, neural text removal (LaMa), context-aware LLM translation, and automated typography layout.
-- **Hardware Agnostic with CPU-First Optimization**: Tuned for multi-threaded SIMD inference (AVX2, AVX-512, ARM NEON) that runs smoothly on standard laptops and CPUs, while automatically taking advantage of DirectML (Windows), CoreML/Metal (macOS), or CUDA (Linux) when a dedicated GPU is available.
-- **Seamless Ecosystem Integration**: Capture chapters from online reader platforms via the 1-click browser extension, and read finished chapters anywhere on your home network through the dedicated Mihon / Tachiyomi extension.
-
----
-
-## Translation Pipeline & Core Capabilities
-
-```mermaid
-flowchart LR
-    A["<b>Raw Capture</b><br/>Extension / Folders"] --> B["<b>Webtoon Reslice</b><br/>Gutter Slicing"]
-    B --> C["<b>Detection & OCR</b><br/>Bubbles & Text Extraction"]
-    C --> D["<b>LLM Translation</b><br/>Glossaries & Memory"]
-    D --> E["<b>Neural Inpainting</b><br/>LaMa Canvas Cleaning"]
-    E --> F["<b>Typesetting</b><br/>Font Fitting & Layout"]
-    F --> G["<b>Reader & Sync</b><br/>Web Studio & Mihon"]
-```
-
-1. **Web Importer Extension**: Captures full comic chapters directly from online reader sites, smoothly handling lazy-loaded images and filtering out ad containers.
-2. **Webtoon Gutter Reslicing**: Automatically recombines and splits tall vertical strips along natural panel gutters before processing, ensuring speech bubbles are never cut in half across slice seams.
-3. **Speech Bubble & Text Detection**: Koharu RF-DETR Seg 2XL finds dialogue bubbles, captions, sound effects and panels, and the OCR line detector finds each line of text inside them.
-4. **Multi-Language OCR**: High-accuracy text extraction with support for vertical and horizontal text layouts across 10 languages.
-5. **Context-Aware AI Translation & Glossaries**: Integrates with local LLMs (Ollama, LM Studio with Qwen, Llama, Gemma) or cloud APIs (Gemini, OpenAI, Groq, OpenRouter). Uses a sliding dialogue context of previous pages (4 by default, adjustable) to keep speaker identity, pronouns, and topic consistent across page turns, combined with Aho-Corasick terminology glossaries to enforce consistent names and cultivation terms across chapters.
-6. **Neural Artwork Inpainting (LaMa)**: Removes dialogue text while reconstructing underlying artwork, gradients, and textures with configurable edge padding.
-7. **Typesetting Studio & Typography**: Automatically computes font sizing, line breaks, outline strokes, and bubble tilt, with per-script fonts (Hindi, Thai, Arabic including right-to-left layout, CJK, and more), plus a per-script accent font for skill names, attacks, spells, and title cards that the translator marks automatically, and plain letters (É to E) wherever a font has no accented letters, so a word never mixes fonts.
-8. **Interactive Studio Inspector**: Visual overlay to inspect raw OCR bounding boxes, character confidence scores, model prompts, and make quick text adjustments before saving.
-
----
-
-## System Requirements & Hardware Support
-
-XianScan is designed to be CPU-first, running on standard laptops without requiring a dedicated GPU.
-
-| Component | Minimum Specification | Recommended Specification |
-| :--- | :--- | :--- |
-| **CPU** | 4-Core x86_64 with AVX2 (Intel Core 6th Gen+ / AMD Ryzen) or Apple M1+ | 6 to 8 Cores (AVX2 / AVX-512 / ARM NEON) |
-| **RAM** | 8 GB (Engine RSS ~1.2 GB + Image Buffers) | 16 GB+ (Mandatory if running local LLMs like Ollama alongside) |
-| **Disk Space** | 1 GB (Executable + embedded models) | 5 GB+ SSD for chapter caching and SQLite storage |
-| **Dependencies** | None (Node.js runtime & ONNX models are embedded) | None required |
-| **GPU / VRAM** | None required (Multi-threaded CPU runs out of the box) | Dedicated GPU with 8 GB+ VRAM (DirectML • CoreML • Linux CUDA) |
-
-<details>
-  <summary><b>GPU Compatibility Matrix & Platform Notes</b></summary>
-  <br/>
-
-| GPU Type | Windows (`directml`) | Linux (`cuda`) | macOS (`coreml`) |
-| :--- | :--- | :--- | :--- |
-| **NVIDIA Dedicated** | DirectML | CUDA ([Driver + cuDNN setup](docs/linux-cuda-setup.md)) | N/A |
-| **AMD Discrete (Radeon)** | DirectML | CPU only (ROCm planned) | N/A |
-| **Intel Arc Discrete** | DirectML | CPU only | N/A |
-| **Integrated GPU (Intel/AMD)** | CPU only (stability fallback) | CPU only | N/A |
-| **Apple Silicon (M-Series)** | N/A | N/A | CoreML / Metal |
-
-> All GPU acceleration is optional. If an unsupported GPU is detected or dependencies are absent, XianScan automatically routes inference to the multi-threaded CPU engine. For Linux NVIDIA GPU configuration and driver/cuDNN prerequisites, see the [Linux CUDA Acceleration Guide](docs/linux-cuda-setup.md). For headless Windows Server and cloud VM setups (AWS EC2, Azure, Hetzner), see the [Windows Server Deployment Guide](docs/windows-server-deployment.md).
-
-</details>
-
----
-
-## Supported Formats & Languages
-
-### Comic Formats
-- **Manhua (Chinese)**: Vertical strips, multi-line narrative blocks, and cultivation terminology glossaries.
-- **Manhwa & Webtoons (Korean)**: Long-strip gutter splitting, vertical page stitching, and Korean OCR dictionary support.
-- **Manga (Japanese)**: Right-to-left layout, vertical line OCR, and multi-column bubble handling.
-- **Western & Global Comics**: Horizontal text flow and uppercase comic typography.
-
-### OCR Languages (10 Languages)
-- **East Asian**: Chinese (Simplified & Traditional), Japanese, Korean
-- **Southeast Asian**: Thai, Indonesian
-- **European & Global**: English, Spanish, French, Russian
-
----
-
-<a id="quick-start"></a>
-## Quick Start
-
-### 1. Download & Launch
-Download the pre-compiled binary for your system from [Releases](https://github.com/ArbenApura/xianscan-rust/releases):
-
-- **Windows**: Double-click `xianscan.exe` (click *More info* -> *Run anyway* if Windows SmartScreen prompts).
-- **Linux / macOS**: Make executable and run:
-  ```bash
-  chmod +x xianscan && ./xianscan
-  ```
-- **macOS**: the binary is not signed by Apple; run `xattr -dr com.apple.quarantine .` in the extracted folder first.
-
-Keep every file from the archive in one folder: the Windows ZIP includes `DirectML.dll` and the Linux archive the ONNX Runtime GPU libraries.
-
-*All neural network weights, OCR dictionaries, and the Web UI are embedded inside the executable. No network connection is required for core startup and CPU inference.*
-
-Each release includes `SHA256SUMS.txt`; verify your download with `sha256sum -c SHA256SUMS.txt --ignore-missing`.
-
-### 2. Open the Web Studio
-- Open `http://localhost:8124` in your browser.
-- **Local Network (LAN)**: LAN access is **off by default**, so only this computer can open XianScan. To use it from tablets or phones on your Wi-Fi, turn on **Settings -> Network & Access -> LAN access** and restart XianScan (or start it with `xianscan --lan`). Then open `http://<your-pc-ip>:8124` on the other device and paste the **access token** shown in the same settings section once.
-- **Upgrading from an earlier version?** If you already had a library, LAN access stays on, but other devices now need the access token.
-
-### 3. Translate a Book
-1. Click **+ New Book** and select source and target languages.
-2. Drag and drop chapter folders into the browser, or import pages with the browser extension.
-3. Configure your translation provider. The default is Ollama with `qwen3.5:9b`: install [Ollama](https://ollama.com/) and run `ollama pull qwen3.5:9b`. Or pick a cloud API in **Settings -> AI Translation Providers**. Then click **Translate All**.
-
-### Run with Docker
-
-A prebuilt image is published to the GitHub Container Registry for every release:
-
-```bash
-docker run -d --name xianscan \
-  -p 8124:8124 \
-  -v xianscan-config:/config \
-  ghcr.io/arbenapura/xianscan:latest
-```
-
-Then open `http://localhost:8124` (or `http://<host-ip>:8124` from another device on your LAN). Your library, settings, and caches persist in the `xianscan-config` volume (all models and the web UI are embedded in the image, so no extra setup is required).
-
-Connections reach the container from the Docker network, not from loopback, so every browser (including one on the Docker host), Mihon and the browser importer need the **access token** once. Print it with:
-
-```bash
-docker exec xianscan /app/xianscan --print-token
-```
-
-To keep the container reachable from this machine only, publish the port on loopback instead: `-p 127.0.0.1:8124:8124`.
-
-The server runs with multi-threaded CPU inference out of the box. NVIDIA GPU acceleration inside containers additionally requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/) with CUDA/cuDNN runtime libraries; when they are unavailable, XianScan automatically falls back to the CPU engine.
-
-To build the image locally from a release archive, see the [`Dockerfile`](Dockerfile).
-
----
-
-<a id="browser-web-extension"></a>
-## Browser Web Extension
-
-<div align="center">
-
-| 1. Capture on Web Reader | 2. In-Place Live Replacement | 3. Live Translation Pipeline in Studio |
-| :---: | :---: | :---: |
-| <img src="docs/showcase/extension_importer_preview.png" width="275" alt="Browser Extension Capture" style="border-radius: 8px;" /> | <img src="docs/showcase/extension_inline_preview.png" width="275" alt="In-Place Live Translation" style="border-radius: 8px;" /> | <img src="docs/showcase/extension_pipeline_preview.png" width="275" alt="Auto-Translation in Studio" style="border-radius: 8px;" /> |
-
-</div>
-
-<br/>
-
-The **1-Click Web Importer Extension** ([`extensions/xianscan-importer/`](extensions/xianscan-importer/)) captures chapters from online comic sites and streams translations back to the host reader:
-
-- **In-Place Live Translation**: Replaces raw comic panels directly on the host website in real-time as background translation finishes, with smooth transitions, darkened pending states, and floating status badges.
-- **1-Click Chapter Import**: Intelligently detects chapter numbers from URL parameters (`?no=19`, `?episodeNo=19`), page subtitles, and book sequences, pre-selecting `Chapter N (NEW)` for instant 1-click execution.
-- **Intelligent Ad & Noise Shield**: Automatically filters out floating banners, promo overlays, external click-trackers, and extreme aspect ratio banner ads (`880×99`).
-- **Selective Exclusion Protection**: Deselecting any image in the gallery protects it from being modified or replaced on the host page.
-- **Private Network Safe**: Streams images into the webpage via in-memory Base64 data URLs through the extension background worker, preventing browser Private Network Access (PNA) permission prompts.
-- **Fast Capture**: Smooth-scrolls webtoon strips to trigger lazy image loaders and extracts pages in seconds.
-
-<details>
-  <summary><b>Installation Instructions</b></summary>
-  <br/>
-
-- **Chrome / Edge / Brave / Opera**: Load unpacked from `extensions/xianscan-importer/dist/` in `chrome://extensions/` with Developer Mode enabled.
-- **Firefox**: Load temporary add-on from `extensions/xianscan-importer/dist-firefox/manifest.json` in `about:debugging#/runtime/this-firefox`.
-- **Connect**: open the extension settings, enter the server endpoint (`http://127.0.0.1:8124` on the same computer) and paste the **access token** from XianScan **Settings -> Network & Access** (required even on the same computer). See the [importer README](extensions/xianscan-importer/README.md#connecting-to-xianscan).
-
-</details>
-
----
-
-<a id="mihon-extension"></a>
-<a id="mihon--tachiyomi-extension-android"></a>
-## Mihon / Tachiyomi Extension (Android)
-
-<div align="center">
-
-| 1. Mihon Source Extension | 2. Synced Manga Library | 3. Native Mobile Reading |
-| :---: | :---: | :---: |
-| <img src="docs/showcase/mihon_source_preview.jpg" width="260" alt="Mihon Sources View" style="border-radius: 12px;"/> | <img src="docs/showcase/mihon_library_preview.jpg" width="260" alt="Mihon Synced Library" style="border-radius: 12px;"/> | <img src="docs/showcase/mihon_reader_preview.jpg" width="260" alt="Mihon Reader View" style="border-radius: 12px;"/> |
-
-</div>
-
-<br/>
-
-Read your translated library on Android phones, tablets, or E-Ink devices using the **[Mihon](https://mihon.app/) / Tachiyomi Extension** ([`extensions/xianscan-mihon/`](extensions/xianscan-mihon/)):
-
-- **Local Wi-Fi Streaming**: Stream or download translated chapters directly over your home network.
-- **Metadata & Cover Sync**: Synchronizes book titles, reading directions, and cover artwork automatically.
-- **Broad Compatibility**: Works with Mihon, TachiyomiSY, J2K, Aniyomi, and Android E-Ink readers (Boox, Bigme, Meebook).
-
-<details>
-  <summary><b>Mihon Repository Setup Guide</b></summary>
-  <br/>
-
-1. In Mihon, open **More -> Settings -> Browse -> Extension repos**.
-2. Tap **+ Add** and paste:
+   ```sh
+   pkg update -y
+   pkg install git bash curl coreutils -y
+   git clone https://github.com/HiuraKiyowoo/xianscan-termux.git "$HOME/xianscan-termux"
+   cp -a "$HOME/xianscan-termux/dist/termux-arm64" "$HOME/xianscan-backend"
    ```
-   https://raw.githubusercontent.com/ArbenApura/xianscan-rust/repo/index.min.json
+
+   Jalankan dari **direktori privat Termux**, bukan `/sdcard`; filesystem berbagi Android dapat memblokir eksekusi.
+
+2. Unduh bobot model di Termux:
+
+   ```sh
+   cd "$HOME/xianscan-termux"
+   bash scripts/fetch-models.sh
    ```
-3. Go to **Browse -> Extensions**, search for **XianScan**, and install it.
-4. Turn on LAN access in XianScan first: **Settings -> Network & Access -> LAN access**, then restart XianScan.
-5. Configure server address:
-   - In **Browse -> Extensions**, tap the settings icon ⚙ next to **XianScan** -> tap the settings icon ⚙ again next to **"Multi"** -> tap **Server address**.
-   - Enter your computer's local IP address and port `8124` (e.g. `http://192.168.100.98:8124`, no trailing slash). You can find your LAN address printed directly in the XianScan startup terminal banner under **Network / LAN**:
 
-   <p align="center">
-     <img src="docs/showcase/lan_terminal_preview.png" width="480" alt="Terminal LAN Address" style="border-radius: 8px;" />
-   </p>
-6. Set the access token: in the same extension settings tap **Access token** and paste the token from XianScan **Settings -> Network & Access**.
-7. In **Browse -> Sources**, tap the filter icon and enable the **Multi** language tag.
-8. Open **XianScan** under Sources to browse and read your translated library.
+3. Jalankan backend dengan folder model tersebut:
 
-</details>
+   ```sh
+   cd "$HOME/xianscan-backend"
+   chmod +x xianscan run-ml.sh
+   MODELS_DIR="$HOME/xianscan-source/models" ./run-ml.sh
+   ```
 
----
+Launcher memakai CPU, membatasi ONNX ke 2 thread dan memproses 1 halaman bersamaan sebagai nilai awal. Log startup akan menunjukkan apakah model tersedia dan berhasil dimuat. Backend ML-only seharusnya mendengarkan di `127.0.0.1:8123`; ia tidak menyajikan studio web.
 
-## Development & REST API
+Untuk pemrosesan gambar, model ONNX **wajib diunduh**. Model tidak disertakan dalam repo atau paket prebuilt. Ruang kosong beberapa GB mungkin dibutuhkan, bergantung bobot model, cache, dan halaman yang diproses.
 
-For building from source, running tests, or integrating with the backend:
+## Build paket Android ARM64 sendiri
 
-- See the **[Developer Guide (DEVELOPMENT.md)](DEVELOPMENT.md)** for compilation flags, Vite dev mode, API route reference, and test suites.
+Build dilakukan pada host Linux x86_64 dengan Rust stable dan Android NDK. Contoh berikut menggunakan NDK r27c:
 
----
+```sh
+rustup target add aarch64-linux-android
+ANDROID_NDK_HOME=/path/to/android-ndk-r27c \
+ANDROID_API_LEVEL=24 \
+./scripts/build-android-termux.sh
+```
 
-## Author
+Hasil paket berada di `dist/termux-arm64/`. Skrip membangun backend Rust release untuk ARM64 Android dan menyalin `libc++_shared.so` yang diperlukan. API level minimum build bawaan adalah 24; perangkat dan versi Android yang sebenarnya tetap perlu diuji.
 
-**XianScan** is architected and built by **[Arben Apura](https://arbenger.com/contact/)** as a showcase of end-to-end full-stack web engineering, intuitive UI/UX design, and intelligent application architecture.
+## Menjalankan UI web penuh lewat Debian proot
 
-### Support Open-Source Development
+Untuk UI SvelteKit, API terjemahan, dan workflow penuh, ikuti [Panduan Android/Termux](docs/termux-proot.md). Jalur tersebut menggunakan Debian ARM64 di Termux:
 
-**XianScan** is an open-source initiative created to give readers and language learners a seamless, effortless way to enjoy untranslated comics. If XianScan brings convenience to your daily reading, saves you time, or enriches your workflow, any support is received with heartfelt gratitude.
+```sh
+pkg install proot-distro -y
+proot-distro install debian
+proot-distro login debian
+```
 
-Your sponsorship directly sustains ongoing development and future project growth, helping cover the API fees and testing infrastructure required to build and optimize XianScan:
+Panduan menjelaskan toolchain, unduh model, instalasi dependency web, dan perintah menjalankan mode development di Debian. Dukungan native Android untuk Node dan addon web belum dinyatakan selesai.
 
-<div align="center">
+## Model dan penyedia terjemahan
 
-[![Support on Ko-Fi](https://img.shields.io/badge/Support_on-Ko--Fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/arbenapura)
-&nbsp;
-[![Discord Community](https://img.shields.io/badge/Discord-Join_Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/dRWaQftNnR)
+Deteksi, OCR, dan inpainting memakai model ONNX lokal. Unduh model yang terdaftar di `models/manifest.tsv` dengan `bash scripts/fetch-models.sh`. Model memiliki lisensi masing-masing dan tidak otomatis tercakup oleh lisensi MIT kode aplikasi.
 
-</div>
+Terjemahan memerlukan layanan LLM terpisah. XianScan mendukung endpoint OpenAI-compatible kustom. Contoh untuk NaraRouter:
 
----
+- **Base URL:** `https://router.bynara.id/v1`
+- **API key:** token API milik pengguna
+- **Model:** alias model yang tersedia pada akun/router
 
-## Ethical Use & Copyright Notice
+Masukkan key di pengaturan provider XianScan; jangan commit atau publikasikan API key. Konfigurasi provider melalui UI memerlukan jalur yang menyertakan UI web, bukan paket backend native ML-only.
 
-**XianScan** is designed strictly as a **local-first personal assistive translation and language-learning tool**.
+## Hasil pengujian dan batasan
 
-- **Respect for Original Creators**: Deep respect for the artistry, effort, and intellectual property of original manga artists, manhua authors, manhwa creators, and publishers.
-- **Support Official Releases**: Users are strongly encouraged to purchase official translated releases and support creators directly on licensed digital platforms (such as *Kuaikan Manhua, Bilibili Manga, Naver WEBTOON, KakaoPage, Tapas, Tappytoon, Lezhin, MANGA Plus by Shueisha, VIZ Media, and BookWalker*).
-- **100% Local & Private**: XianScan does not host, re-distribute, or scrape copyrighted works on public servers. All image processing, OCR, inpainting, and translation execution occur entirely on the user's private local hardware.
-- **No DRM Circumvention**: XianScan does not contain features designed to bypass encryption, digital rights management (DRM), or paywalls.
-- **User Responsibility**: Users are solely responsible for ensuring their usage complies with applicable local laws, fair-use standards, and source platform terms of service. This project does not endorse or facilitate unauthorized commercial redistribution.
+- `cargo check --target aarch64-linux-android --no-default-features`: berhasil di Sandbox dengan Android NDK.
+- `cargo build --target aarch64-linux-android --no-default-features --release`: berhasil; binary terdeteksi sebagai ELF Android ARM64 dengan interpreter `/system/bin/linker64`.
+- `scripts/build-android-termux.sh`: berhasil menghasilkan paket backend native.
+- Runtime di HP Android/Termux, load model, OCR, inpainting, suhu, RAM, dan lifecycle aplikasi Android **belum diuji di perangkat fisik**.
+- Test di host Linux belum seluruhnya lulus: dua test GPU gagal pada lingkungan Sandbox dan satu API test analisis gambar gagal saat model tidak tersedia. Jalankan ulang setelah menyiapkan model dan gunakan perangkat target untuk tes akhir.
+- Android GPU/NNAPI belum diaktifkan; gunakan CPU. Pertahankan Termux di foreground saat pemrosesan panjang.
 
----
+## Kredit dan lisensi
 
-## License & Acknowledgments
-
-Licensed under the **[MIT License](LICENSE)** © 2026 Arben Apura.
-
-- **Koharu RF-DETR Layout Detector & Segmenter**: 768px CPU-optimized RF-DETR Seg 2XL transformer model predicting bounding boxes and instance masks for speech bubbles, dialogue text, onomatopoeia/SFX, and panels by [mayocream/koharu](https://github.com/mayocream/koharu) and [mayocream/koharu-layout-rfdetr-seg-2xl-1152](https://huggingface.co/mayocream/koharu-layout-rfdetr-seg-2xl-1152) (Apache-2.0 / Manga109 terms).
-- **PaddleOCR & RapidOCR**: Multilingual OCR models (PP-OCRv6, Korean, Cyrillic, Thai) and direction classifier by [PaddlePaddle/PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR), [RapidAI/RapidOCR](https://github.com/RapidAI/RapidOCR), and [xberg-io/paddleocr-onnx-models](https://huggingface.co/xberg-io/paddleocr-onnx-models) (Apache-2.0).
-- **LaMa Inpainting**: Large Mask Inpainting architecture by [advimman/lama](https://github.com/advimman/lama) (Apache-2.0) and manga inpainting weights by [ogkalu/lama-manga-onnx-dynamic](https://huggingface.co/ogkalu/lama-manga-onnx-dynamic).
-- **Typography & Fonts**: Open-source dialogue font Friendly Sans and script fonts (Noto Sans Devanagari, Noto Sans Thai, Tajawal) under the SIL Open Font License ([OFL-1.1](https://openfontlicense.org/)); CJK fallback font WenQuanYi Micro Hei by the [WenQuanYi project](http://wenq.org/) under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). The licence texts for the script fonts and WenQuanYi Micro Hei ship in `web/static/fonts/licenses/`. CC Wild Words is a registered trademark of Comicraft. The default Latin accent font Sigmar One by The Sigmar One Project Authors is under the SIL Open Font License (`web/static/fonts/licenses/OFL-SigmarOne.txt`); fonts you import, including freeware comic fonts, stay under their own licences.
-- **ONNX Runtime**: High-performance inference engine by [Microsoft](https://github.com/microsoft/onnxruntime) (MIT License).
-- **Artwork & Trademarks**: All demonstration images are referenced under Fair Use for open-source technical illustration and model benchmarking. All rights and copyrights remain with their respective intellectual property owners.
+Source dasar berasal dari [XianScan upstream](https://github.com/ArbenApura/xianscan-rust) oleh Arben Apura. Perubahan untuk port Termux dalam repo ini adalah eksperimen komunitas. Lisensi source mengikuti [MIT](LICENSE); lisensi model, font, dan aset pihak ketiga mengikuti ketentuan masing-masing.
