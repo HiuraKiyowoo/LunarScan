@@ -110,13 +110,13 @@
 	closable={false}
 >
 	<div class="relative flex flex-col overflow-hidden text-current">
-		<!-- HEADER WITH CANONICAL XIANSCAN LOGO, TITLE & SKIP -->
+		<!-- HEADER WITH LUNAR APP MARK, TITLE & SKIP -->
 		<div class="flex items-center justify-between px-4 py-3.5 sm:px-8 sm:pt-5 sm:pb-3.5 shrink-0">
 			<div class="flex items-center gap-2.5 sm:gap-3">
-				<img src="/favicon.svg" alt="XianScan Logo" class="h-7 w-7 sm:h-8 sm:w-8 shrink-0 rounded-lg shadow-xs" />
+				<img src="/favicon.svg" alt="Lunar Logo" class="h-7 w-7 sm:h-8 sm:w-8 shrink-0 rounded-lg shadow-xs" />
 				<div>
 					<h2 class="text-sm sm:text-lg font-bold tracking-tight font-comic">
-						<span class="text-[#b23a2e] dark:text-[#e08a63]">Xian</span><span class="text-black dark:text-white">Scan</span> Tour
+						<span class="text-[#b23a2e] dark:text-[#e08a63]">Lunar</span> Tour
 					</h2>
 					<p class="text-[10.5px] sm:text-xs opacity-60">Step {currentStep + 1} of {TOTAL_STEPS}</p>
 				</div>
@@ -154,7 +154,7 @@
 						</div>
 
 						<p class="text-[11.5px] sm:text-sm leading-relaxed opacity-75">
-							XianScan brings complete comic translation to your machine: bubble segmentation, multi-language OCR, LLM translation, neural inpainting (LaMa), and typography layout.
+							Lunar brings complete comic translation to your machine: bubble segmentation, multi-language OCR, LLM translation, neural inpainting (LaMa), and typography layout.
 						</p>
 
 						<!-- PIPELINE FLOW 4 MINI-BADGES -->

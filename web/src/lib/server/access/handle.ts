@@ -22,7 +22,7 @@ import { verifySessionCookie, verifyToken } from './token';
 
 export const SESSION_COOKIE = 'xianscan_session';
 export const AUTH_REQUIRED_MESSAGE =
-	'XianScan access token required. Copy it from Settings, Network & Access, then paste it into the extension or open /unlock.';
+	'Lunar access token required. Copy it from Settings, Network & Access, then paste it into the extension or open /unlock.';
 const LOG_INTERVAL_MS = 60_000;
 
 // -- STATE -- //

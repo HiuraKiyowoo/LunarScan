@@ -180,11 +180,11 @@
 				<a
 					href="/app"
 					class="flex items-center gap-2 sm:gap-2.5 font-bold tracking-tight transition-transform duration-200 hover:opacity-85 active:scale-95 shrink-0"
-					aria-label="XianScan Home"
+					aria-label="Lunar Home"
 				>
-					<img src="/favicon.svg" alt="XianScan Logo" class="h-6 w-6 sm:h-7 sm:w-7 shrink-0 rounded-md shadow-2xs" />
+					<img src="/favicon.svg" alt="Lunar Logo" class="h-6 w-6 sm:h-7 sm:w-7 shrink-0 rounded-md shadow-2xs" />
 					<span class="text-base sm:text-lg font-comic font-bold tracking-wide text-[#b23a2e] dark:text-[#e08a63]">
-						Xian<span class="text-black dark:text-white">Scan</span>
+						Lunar
 					</span>
 				</a>
 
@@ -250,7 +250,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="inline-flex items-center gap-1.5 hover:underline font-bold text-[11px] tracking-tight"
-							title={`New XianScan release v${$versionCheck.latestVersion} available. Click to view on GitHub.`}
+							title={`New upstream XianScan release v${$versionCheck.latestVersion} available. Click to view on GitHub.`}
 							use:ripple
 						>
 							<ArrowUpCircle size={14} class="shrink-0" />

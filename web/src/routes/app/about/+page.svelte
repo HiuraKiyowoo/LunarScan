@@ -118,10 +118,10 @@
 </script>
 
 <svelte:head>
-	<title>About : XianScan Translation Studio</title>
+	<title>About : Lunar Translation Studio</title>
 	<meta
 		name="description"
-		content="About XianScan: Local-first translation studio for manga, manhwa, and manhua built with Rust and ONNX Runtime by Arben Apura."
+		content="About Lunar, a community port based on XianScan by Arben Apura for manga, manhwa, and manhua translation."
 	/>
 </svelte:head>
 
@@ -130,11 +130,11 @@
 	<header class="rounded-2xl border border-black/10 bg-black/[0.015] p-4 sm:p-6 dark:border-white/10 dark:bg-white/[0.015] space-y-3 sm:space-y-4">
 		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 			<div class="flex items-center gap-2.5 sm:gap-3">
-				<Seal char="仙" size={28} />
+				<Seal char="月" size={28} />
 				<div class="min-w-0">
 					<div class="flex items-center gap-2 flex-wrap">
 						<h1 class="text-lg sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-							XianScan
+							Lunar
 						</h1>
 						<span class="rounded-md bg-[#b23a2e]/10 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-semibold text-[#b23a2e] dark:text-[#e08a63] font-mono shrink-0">
 							v{$versionCheck.currentVersion}
@@ -171,7 +171,7 @@
 		</div>
 
 		<p class="text-[11.5px] sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed pt-2.5 border-t border-black/5 dark:border-white/5">
-			XianScan automates the entire localization workflow on your local machine: detecting dialogue bubbles with RF-DETR Seg, extracting text via 10-language OCR, translating with LLMs, inpainting backgrounds with LaMa, and rendering typography with Google Skia.
+			Lunar is a community port based on XianScan by Arben Apura. It automates comic localization with RF-DETR detection, multi-language OCR, LLM translation, LaMa inpainting, and typesetting.
 		</p>
 	</header>
 
@@ -347,11 +347,11 @@
 			<div class="flex items-center gap-2">
 				<Heart size={15} class="text-[#b23a2e] fill-current" />
 				<h3 class="font-bold text-neutral-900 dark:text-neutral-100 text-xs sm:text-base">
-					Support XianScan R&D
+					Support upstream XianScan R&amp;D
 				</h3>
 			</div>
 			<p class="text-[11px] sm:text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-				XianScan is an open-source project by Arben Apura. Your sponsorship helps sustain continuous model testing, GPU compute costs, and development.
+				The original XianScan project is open source by Arben Apura. This link supports the upstream project, which Lunar is based on.
 			</p>
 		</div>
 
@@ -394,7 +394,7 @@
 	<!-- COMPACT FOOTER -->
 	<footer class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-[11px] sm:text-xs text-neutral-500 text-center sm:text-left">
 		<p>
-			XianScan · Created by <a href="https://arbenger.com/contact/" target="_blank" rel="noopener noreferrer" class="font-semibold text-neutral-700 dark:text-neutral-300 hover:underline">Arben Apura</a> · MIT License
+			Lunar · Based on XianScan by <a href="https://arbenger.com/contact/" target="_blank" rel="noopener noreferrer" class="font-semibold text-neutral-700 dark:text-neutral-300 hover:underline">Arben Apura</a> · MIT License
 		</p>
 		<div class="flex items-center justify-center gap-3">
 			<a href={DOCS_URL} target="_blank" rel="noopener noreferrer" class="hover:underline">Docs</a>

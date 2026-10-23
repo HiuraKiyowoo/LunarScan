@@ -290,11 +290,11 @@
 							Found {totalImages} page{totalImages === 1 ? '' : 's'} ready for import
 						{/if}
 					</p>
-					<p class="text-[11px] leading-tight opacity-75">
-						{#if rows.length > 1}
-							XianScan will create each folder as a new chapter and upload its pages in sequence.
-						{:else}
-							XianScan will create {rows[0]?.title || `Chapter ${nextChapterNumber}`} and upload {totalImages} page{totalImages === 1 ? '' : 's'}.
+						<p class="text-[11px] leading-tight opacity-75">
+							{#if rows.length > 1}
+								Lunar will create each folder as a new chapter and upload its pages in sequence.
+							{:else}
+								Lunar will create {rows[0]?.title || `Chapter ${nextChapterNumber}`} and upload {totalImages} page{totalImages === 1 ? '' : 's'}.
 						{/if}
 					</p>
 				</div>

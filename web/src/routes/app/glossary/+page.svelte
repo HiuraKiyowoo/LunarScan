@@ -155,7 +155,7 @@
 </script>
 
 <svelte:head>
-	<title>{scope === 'global' ? 'Global' : 'Book'} Glossary - XianScan</title>
+	<title>{scope === 'global' ? 'Global' : 'Book'} Glossary - Lunar</title>
 	<meta
 		name="description"
 		content="Manage translation glossary terms, aliases, and character names for comic translation."

@@ -37,7 +37,7 @@
 </script>
 
 <svelte:head>
-	<title>XianScan : Local-First Manga, Manhwa & Manhua Translation</title>
+	<title>Lunar : Local-First Manga, Manhwa & Manhua Translation</title>
 </svelte:head>
 
 <div class="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center">

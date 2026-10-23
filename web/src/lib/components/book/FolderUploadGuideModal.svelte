@@ -29,7 +29,7 @@
 			<div class="space-y-1">
 				<p class="font-semibold text-xs">How Multi-Chapter Folder Import Works</p>
 				<p class="text-[11px] opacity-80 leading-relaxed">
-					You can select or drag & drop a root book folder containing multiple chapter subfolders. XianScan automatically detects chapter numbering (e.g. <code>Ch. 01</code>, <code>第1章</code>, <code>001 - Title</code>), creates chapters sequentially, and uploads page images in natural order.
+					You can select or drag & drop a root book folder containing multiple chapter subfolders. Lunar automatically detects chapter numbering (e.g. <code>Ch. 01</code>, <code>第1章</code>, <code>001 - Title</code>), creates chapters sequentially, and uploads page images in natural order.
 				</p>
 			</div>
 		</div>
@@ -82,4 +82,3 @@
 		</Button>
 	</svelte:fragment>
 </Modal>
-

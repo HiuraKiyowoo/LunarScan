@@ -30,6 +30,6 @@ export PIPELINE_PAGE_CONCURRENCY="${PIPELINE_PAGE_CONCURRENCY:-1}"
 export ML_PORT="${ML_PORT:-8123}"
 export DEV_PORT="${DEV_PORT:-8125}"
 
-printf 'XianScan UI: http://127.0.0.1:%s\n' "$DEV_PORT"
+printf 'Lunar UI: http://127.0.0.1:%s\n' "$DEV_PORT"
 printf 'Berhenti dengan Ctrl+C. Pertahankan Termux di foreground.\n'
 exec "$ROOT/target/release/xianscan" --dev

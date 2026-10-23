@@ -1,6 +1,7 @@
-# XianScan Termux — port eksperimental Android ARM64
+# LunarScan — port eksperimental XianScan untuk Android ARM64
 
 Port komunitas untuk menjalankan [XianScan](https://github.com/ArbenApura/xianscan-rust) di Android. Repo ini tidak resmi dan tidak dikelola oleh upstream.
+Nama repo GitHub: **LunarScan**. Brand UI aplikasi: **Lunar**. Proyek ini berbasis XianScan oleh Arben Apura; credit dan lisensi upstream dipertahankan di repo ini.
 
 ## Instalasi full app: sekali setup, lalu jalankan
 
@@ -11,7 +12,7 @@ Di aplikasi Termux:
 ```sh
 pkg update -y
 pkg install -y git proot-distro
-git clone https://github.com/HiuraKiyowoo/xianscan-termux.git "$HOME/xianscan-termux"
+git clone https://github.com/HiuraKiyowoo/LunarScan.git "$HOME/xianscan-termux"
 cd "$HOME/xianscan-termux"
 bash scripts/install-termux.sh
 ```
@@ -28,9 +29,9 @@ Buka **http://127.0.0.1:8125** di browser Android. Untuk berhenti, tekan `Ctrl+C
 
 ## Pakai NaraRouter untuk penerjemahan
 
-**Tidak perlu mengunduh LLM penerjemah lokal.** XianScan dapat mengirim permintaan penerjemahan ke layanan cloud seperti NaraRouter. Model ONNX tetap diunduh untuk tugas gambar lokal seperti deteksi balon/teks, OCR, dan inpainting; total model pada manifest saat ini sekitar 403 MB.
+**Tidak perlu mengunduh LLM penerjemah lokal.** Lunar dapat mengirim permintaan penerjemahan ke layanan cloud seperti NaraRouter. Model ONNX tetap diunduh untuk tugas gambar lokal seperti deteksi balon/teks, OCR, dan inpainting; total model pada manifest saat ini sekitar 403 MB.
 
-Di UI XianScan, buka **Settings → AI Translation Providers**, pilih **Custom (OpenAI-Compatible)**, lalu masukkan:
+Di UI Lunar, buka **Settings → AI Translation Providers**, pilih **Custom (OpenAI-Compatible)**, lalu masukkan:
 
 - **Base URL:** `https://router.bynara.id/v1`
 - **API key:** token API NaraRouter milikmu
@@ -56,7 +57,7 @@ ANDROID_API_LEVEL=24 \
 ## Status port dan batasan
 
 - Backend Rust berhasil di-cross-build dan di-link menjadi ELF Android ARM64. Paket native itu belum diuji langsung di HP.
-- Full UI dijalankan di Debian ARM64 dalam `proot-distro`, bukan sebagai Android APK. Setup script otomatis membangun SvelteKit/Vite UI dan Rust backend dari source.
+- Full UI dengan brand Lunar dijalankan di Debian ARM64 dalam `proot-distro`, bukan sebagai Android APK. Setup memasang dependency UI dan membangun backend Rust; launcher menjalankan SvelteKit/Vite.
 - Inferensi OCR/deteksi/inpainting berjalan di CPU pada konfigurasi awal; Android GPU/NNAPI belum diaktifkan.
 - Runtime di perangkat fisik—termasuk pemuatan model, OCR, inpainting, suhu, RAM, dan lifecycle Termux—belum diverifikasi. Mulai dengan satu halaman uji dan pantau suhu/RAM.
 - Model ONNX punya lisensi masing-masing dan tidak otomatis tercakup oleh lisensi MIT source.

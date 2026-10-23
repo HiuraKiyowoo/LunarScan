@@ -38,9 +38,9 @@
 				return;
 			}
 			const data = await res.json().catch(() => ({}));
-			errorMessage = data.message || 'Could not unlock XianScan.';
+			errorMessage = data.message || 'Could not unlock Lunar.';
 		} catch {
-			errorMessage = 'Could not reach XianScan. Check that it is still running.';
+			errorMessage = 'Could not reach Lunar. Check that it is still running.';
 		} finally {
 			submitting = false;
 		}
@@ -60,16 +60,16 @@
 </script>
 
 <svelte:head>
-	<title>Unlock XianScan</title>
+	<title>Unlock Lunar</title>
 </svelte:head>
 
 <!-- UNLOCK: ONE TOKEN FIELD, NO APP CHROME -->
 <main class="flex min-h-full items-center justify-center px-4 py-16">
 	<form class="w-full max-w-sm space-y-4" on:submit|preventDefault={unlock}>
 		<div class="space-y-1">
-			<h1 class="text-xl font-semibold">Unlock XianScan</h1>
+			<h1 class="text-xl font-semibold">Unlock Lunar</h1>
 			<p class="text-sm opacity-70">
-				This device needs the access token once. On the computer running XianScan, open Settings, Network &amp;
+				This device needs the access token once. On the computer running Lunar, open Settings, Network &amp;
 				Access and copy the token. On a headless server, run
 				<code class="rounded bg-black/5 px-1 dark:bg-white/10">xianscan --print-token</code>. In Docker, run
 				<code class="rounded bg-black/5 px-1 dark:bg-white/10">docker exec &lt;container&gt; /app/xianscan --print-token</code>.

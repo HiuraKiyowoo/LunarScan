@@ -41,7 +41,7 @@ export function armParentWatchdog(deps: WatchdogDeps = {}): boolean {
 	const parentGone = (why: string) => {
 		if (fired) return;
 		fired = true;
-		log(`[server] XianScan parent process is gone (${why}); exiting.`);
+		log(`[server] Lunar parent process is gone (${why}); exiting.`);
 		exit(0);
 	};
 
@@ -99,7 +99,7 @@ export function installProcessGuards(opts: ProcessGuardOptions): void {
 			return;
 		}
 		exiting = true;
-		log('[server] FATAL uncaught exception; exiting so XianScan restarts a clean web server:', err);
+			log('[server] FATAL uncaught exception; exiting so Lunar restarts a clean web server:', err);
 		try {
 			opts.beforeExit?.();
 		} catch (flushErr) {

@@ -710,7 +710,7 @@
 <svelte:window on:keydown={handleGlobalKeydown} />
 
 <svelte:head>
-	<title>Library - XianScan</title>
+	<title>Library - Lunar</title>
 	<meta name="description" content="Browse and manage translated comics, manhua, and manga books." />
 </svelte:head>
 

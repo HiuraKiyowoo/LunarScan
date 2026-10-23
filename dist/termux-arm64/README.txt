@@ -1,4 +1,4 @@
-XianScan Android ARM64 Rust ML/API backend (Termux)
+Lunar Android ARM64 Rust ML/API backend (Termux), based on XianScan upstream
 
 This package contains only the native Rust ML/API process and libc++_shared.so.
 It does not include the web studio, Node.js, or ONNX model weights.

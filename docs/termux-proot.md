@@ -1,4 +1,6 @@
-# Panduan instalasi XianScan di Android/Termux
+# Panduan instalasi Lunar di Android/Termux
+
+Lunar adalah port komunitas berbasis XianScan oleh Arben Apura. Identitas source upstream dan lisensinya tetap dicantumkan di repo.
 
 ## Setup full app sekali saja
 
@@ -7,7 +9,7 @@ Cara yang direkomendasikan menjalankan UI web dan backend bersama-sama di Debian
 ```sh
 pkg update -y
 pkg install -y git proot-distro
-git clone https://github.com/HiuraKiyowoo/xianscan-termux.git "$HOME/xianscan-termux"
+git clone https://github.com/HiuraKiyowoo/LunarScan.git "$HOME/xianscan-termux"
 cd "$HOME/xianscan-termux"
 bash scripts/install-termux.sh
 ```

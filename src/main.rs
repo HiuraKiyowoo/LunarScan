@@ -361,7 +361,7 @@ async fn run(cfg: StartupConfig) -> anyhow::Result<()> {
     println!(
         "  │  {}  {}  {}",
         "🏮".bright_yellow(),
-        "XIANSCAN".bold().bright_white(),
+        "LUNAR".bold().bright_white(),
         "— NATIVE COMIC TRANSLATION & TYPESETTING STUDIO".cyan()
     );
     println!("  ╰{}", "────────────────────────────────────────────────────────────────────────".cyan().dimmed());
@@ -388,12 +388,12 @@ async fn run(cfg: StartupConfig) -> anyhow::Result<()> {
         clean_path(&models_dir).dimmed()
     );
     println!(
-        "    {}  Repository  : {}",
+        "    {}  Upstream Repo : {}",
         "•".cyan(),
         "https://github.com/ArbenApura/xianscan-rust".bright_cyan().underline()
     );
     println!(
-        "    {}  User Guide  : {}",
+        "    {}  Upstream Guide: {}",
         "•".cyan(),
         "https://github.com/ArbenApura/xianscan-rust#quick-start".bright_cyan().underline()
     );
@@ -540,14 +540,14 @@ async fn run(cfg: StartupConfig) -> anyhow::Result<()> {
         println!("        {} Health API       : {}", "•".cyan(), format!("http://127.0.0.1:{}/health", ml_port).bright_cyan().underline());
         println!("                           {}", "(run 'cd web && yarn dev' in another terminal)".dimmed());
     } else if is_dev_mode {
-        println!("    {}  {}", "🚀".bright_green(), "XianScan is running (Dev Mode: ML + Vite HMR)!".bold().bright_green());
+        println!("    {}  {}", "🚀".bright_green(), "Lunar is running (Dev Mode: ML + Vite HMR)!".bold().bright_green());
         println!();
         println!("        {} Web UI (Local)   : {}", "•".cyan(), format!("http://localhost:{}", web_port).bright_cyan().bold().underline());
         print_lan_lines(bind_mode, lan_ip, web_port);
         println!("        {} ML Backend API   : {}", "•".cyan(), format!("http://127.0.0.1:{}", ml_port).bright_cyan().underline());
         println!("        {} Health API       : {}", "•".cyan(), format!("http://127.0.0.1:{}/health", ml_port).bright_cyan().underline());
     } else {
-        println!("    {}  {}", "🚀".bright_green(), "XianScan Native Studio is online & ready!".bold().bright_green());
+        println!("    {}  {}", "🚀".bright_green(), "Lunar Native Studio is online & ready!".bold().bright_green());
         println!();
         println!("        {} Web Studio       : {}", "•".cyan(), format!("http://localhost:{}", web_port).bright_cyan().bold().underline());
         print_lan_lines(bind_mode, lan_ip, web_port);
@@ -578,10 +578,10 @@ async fn run(cfg: StartupConfig) -> anyhow::Result<()> {
         if let Some(mut server) = _ssr_guard.take() {
             server.stop();
         }
-        anyhow::bail!("the ML server stopped ({reason}); XianScan is shutting down");
+        anyhow::bail!("the ML server stopped ({reason}); Lunar is shutting down");
     }
 
-    println!("\n  {} {}", "✓".bright_green(), "Shutting down XianScan cleanly...".dimmed());
+    println!("\n  {} {}", "✓".bright_green(), "Shutting down Lunar cleanly...".dimmed());
     let _ = shutdown_tx.send(true);
     if let Some(mut server) = _ssr_guard.take() {
         server.stop();

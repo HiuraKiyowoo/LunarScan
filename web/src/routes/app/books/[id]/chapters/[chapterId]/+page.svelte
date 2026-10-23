@@ -1251,7 +1251,7 @@
 <svelte:head>
 	<title
 		>{chapter
-			? `${chapter.titleTarget || chapter.title || `Chapter ${chapter.seq + 1}`} - XianScan`
+			? `${chapter.titleTarget || chapter.title || `Chapter ${chapter.seq + 1}`} - Lunar`
 			: 'Chapter Reader'}</title
 	>
 	<meta

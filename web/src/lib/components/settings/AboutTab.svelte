@@ -44,7 +44,7 @@
 				if (res.hasUpdate && res.latestVersion) {
 					return `New version v${res.latestVersion} is available!`;
 				}
-				return 'XianScan is up to date!';
+					return 'Lunar is up to date with the XianScan upstream release feed.';
 			},
 			error: 'Network error checking for updates',
 		});
@@ -53,8 +53,8 @@
 
 <div class="space-y-5">
 	<div>
-		<h2 class="text-base font-bold">About & System Diagnostics</h2>
-		<p class="text-xs opacity-60 mt-0.5">XianScan native runtime environment, build fingerprint, and service states</p>
+			<h2 class="text-base font-bold">About & System Diagnostics</h2>
+			<p class="text-xs opacity-60 mt-0.5">Lunar runtime environment, build fingerprint, and service states</p>
 	</div>
 
 	<!-- VERSION & UPDATE STATUS CARD -->

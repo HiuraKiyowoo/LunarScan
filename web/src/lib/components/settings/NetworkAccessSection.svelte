@@ -90,7 +90,7 @@
 			});
 			if (!res.ok) throw new Error(`HTTP ${res.status}`);
 			status = await res.json();
-			toast.success(enabled ? 'LAN access will be on after restarting XianScan' : 'LAN access will be off after restarting XianScan');
+			toast.success(enabled ? 'LAN access will be on after restarting Lunar' : 'LAN access will be off after restarting Lunar');
 		} catch (e: any) {
 			toast.error(e?.message || 'Could not save LAN access');
 			await load();
@@ -125,7 +125,7 @@
 <div class="space-y-5">
 	<div>
 		<h2 class="text-base font-bold">Network &amp; Access</h2>
-		<p class="mt-0.5 text-xs opacity-60">Who can reach XianScan, and the token other devices use to connect</p>
+		<p class="mt-0.5 text-xs opacity-60">Who can reach Lunar, and the token other devices use to connect</p>
 	</div>
 
 	{#if loadError}
@@ -187,8 +187,8 @@
 						{/if}
 					</div>
 					<p class="mt-1 text-xs opacity-60">
-						Lets phones, tablets and other computers on your network use XianScan. They need the access token.
-						Takes effect after restarting XianScan.
+						Lets phones, tablets and other computers on your network use Lunar. They need the access token.
+						Takes effect after restarting Lunar.
 					</p>
 				</div>
 				<Switch
@@ -245,14 +245,14 @@
 		<div class="space-y-1 rounded-2xl border border-black/10 p-4 text-xs opacity-80 dark:border-white/10">
 			<div class="text-sm font-semibold opacity-100">Pair a device</div>
 			<p>
-				<strong>Mihon:</strong> turn on LAN access above and restart XianScan. Then in the extension settings, set Server
+				<strong>Mihon:</strong> turn on LAN access above and restart Lunar. Then in the extension settings, set Server
 				address to one of the addresses shown and paste the Access token.
 			</p>
 			<p><strong>Browser importer:</strong> extension Settings, paste the Access token.</p>
 			{#if status.effectiveBind === 'lan' && status.lanUrls.length > 0}
 				<p><strong>Another device:</strong> open one of the addresses above and paste the token once.</p>
 			{:else}
-				<p><strong>Another device:</strong> turn on LAN access, restart XianScan, then open one of the listed addresses and paste the token once.</p>
+				<p><strong>Another device:</strong> turn on LAN access, restart Lunar, then open one of the listed addresses and paste the token once.</p>
 			{/if}
 		</div>
 	{/if}

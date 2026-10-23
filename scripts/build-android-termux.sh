@@ -59,7 +59,7 @@ exec "$HERE/xianscan" --ml-only "$@"
 RUNNER
 chmod 0755 "$OUT/run-ml.sh"
 cat > "$OUT/README.txt" <<TXT
-XianScan Android ARM64 Rust ML/API backend (Termux)
+Lunar Android ARM64 Rust ML/API backend (Termux), based on XianScan upstream
 
 This package contains only the native Rust ML/API process and libc++_shared.so.
 It does not include the web studio, Node.js, or ONNX model weights.
@@ -70,7 +70,7 @@ private home (not shared /sdcard storage), make sure model files are under
   ./run-ml.sh
 
 Default ML-only endpoint: 127.0.0.1:8123. This is a backend/API build, not a
-complete interactive XianScan app. Model downloads and end-to-end inference
+complete interactive Lunar app. Model downloads and end-to-end inference
 must be validated on the target phone. Android GPU acceleration is not enabled.
 Build API level: $API
 TXT

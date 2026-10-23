@@ -1057,8 +1057,8 @@
 <svelte:window on:keydown={handleGlobalKeydown} />
 
 <svelte:head>
-	<title>{book ? `${book.titleTarget || book.title} - XianScan` : 'Book Details'}</title>
-</svelte:head>
+	<title>{book ? `${book.titleTarget || book.title} - Lunar` : 'Book Details'}</title>
+	</svelte:head>
 
 <!-- BOOK DETAIL & CHAPTER MANAGEMENT -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -2254,4 +2254,3 @@
 		on:close={() => (directivesModalOpen = false)}
 	/>
 {/if}
-

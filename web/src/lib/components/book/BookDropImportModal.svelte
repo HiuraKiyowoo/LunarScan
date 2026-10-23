@@ -377,7 +377,7 @@
 				<div class="space-y-1">
 					<p class="text-sm font-bold">Drop a manga or book folder here</p>
 					<p class="text-[11px] opacity-60">
-						XianScan will scan the folder structure and detect chapters automatically.
+						Lunar will scan the folder structure and detect chapters automatically.
 					</p>
 				</div>
 				<Button variant="secondary" class="gap-1.5" on:click={() => folderPickerInput?.click()}>
