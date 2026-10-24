@@ -44,7 +44,7 @@
 				if (res.hasUpdate && res.latestVersion) {
 					return `New version v${res.latestVersion} is available!`;
 				}
-					return 'Lunar is up to date with the XianScan upstream release feed.';
+					return 'Lunar is up to date with the configured release feed.';
 			},
 			error: 'Network error checking for updates',
 		});

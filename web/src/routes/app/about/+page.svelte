@@ -121,7 +121,7 @@
 	<title>About : Lunar Translation Studio</title>
 	<meta
 		name="description"
-		content="About Lunar, a community port based on XianScan by Arben Apura for manga, manhwa, and manhua translation."
+		content="About Lunar, a local-first studio for manga, manhwa, and manhua translation."
 	/>
 </svelte:head>
 
@@ -171,7 +171,7 @@
 		</div>
 
 		<p class="text-[11.5px] sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed pt-2.5 border-t border-black/5 dark:border-white/5">
-			Lunar is a community port based on XianScan by Arben Apura. It automates comic localization with RF-DETR detection, multi-language OCR, LLM translation, LaMa inpainting, and typesetting.
+			Lunar automates comic localization with RF-DETR detection, multi-language OCR, LLM translation, LaMa inpainting, and typesetting.
 		</p>
 	</header>
 
@@ -347,11 +347,11 @@
 			<div class="flex items-center gap-2">
 				<Heart size={15} class="text-[#b23a2e] fill-current" />
 				<h3 class="font-bold text-neutral-900 dark:text-neutral-100 text-xs sm:text-base">
-					Support upstream XianScan R&amp;D
+					Support open-source development
 				</h3>
 			</div>
 			<p class="text-[11px] sm:text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-				The original XianScan project is open source by Arben Apura. This link supports the upstream project, which Lunar is based on.
+				Lunar builds on open-source work from the comic-localization community. This link supports ongoing development of the original project.
 			</p>
 		</div>
 
@@ -394,7 +394,7 @@
 	<!-- COMPACT FOOTER -->
 	<footer class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-[11px] sm:text-xs text-neutral-500 text-center sm:text-left">
 		<p>
-			Lunar · Based on XianScan by <a href="https://arbenger.com/contact/" target="_blank" rel="noopener noreferrer" class="font-semibold text-neutral-700 dark:text-neutral-300 hover:underline">Arben Apura</a> · MIT License
+			Lunar · MIT License
 		</p>
 		<div class="flex items-center justify-center gap-3">
 			<a href={DOCS_URL} target="_blank" rel="noopener noreferrer" class="hover:underline">Docs</a>

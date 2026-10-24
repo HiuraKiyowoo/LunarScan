@@ -250,7 +250,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="inline-flex items-center gap-1.5 hover:underline font-bold text-[11px] tracking-tight"
-							title={`New upstream XianScan release v${$versionCheck.latestVersion} available. Click to view on GitHub.`}
+							title={`New upstream release v${$versionCheck.latestVersion} available. Click to view on GitHub.`}
 							use:ripple
 						>
 							<ArrowUpCircle size={14} class="shrink-0" />

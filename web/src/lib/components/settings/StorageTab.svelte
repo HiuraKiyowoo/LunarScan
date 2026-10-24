@@ -400,7 +400,7 @@
 				<div class="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-black/[0.03] dark:hover:bg-white/[0.03]">
 					<div class="flex items-center gap-2 min-w-0 pr-2">
 						<span class="h-2.5 w-2.5 rounded-full bg-amber-600 shrink-0"></span>
-						<span class="font-medium truncate">Database (xianscan.db)</span>
+						<span class="font-medium truncate">Database</span>
 						<span class="text-[11px] opacity-50 shrink-0">({storageStats.categories.database.count} files)</span>
 					</div>
 					<span class="font-mono font-bold shrink-0">{formatBytes(storageStats.categories.database.bytes)}</span>
