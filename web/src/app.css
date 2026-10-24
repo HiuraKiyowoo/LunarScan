@@ -162,3 +162,51 @@
 	100% { transform: translateX(200%); }
 }
 
+
+
+/* LUNAR SOFT UI — REDUCED VISUAL CHROME; FORM CONTROLS AND APP BEHAVIOR STAY UNCHANGED. */
+@layer components {
+	.lunar-soft-ui button[class~='border'],
+	.lunar-soft-ui a[class~='border'] {
+		border-color: transparent !important;
+		box-shadow: none !important;
+		backdrop-filter: none !important;
+	}
+
+	.lunar-soft-ui button[class~='border']:hover,
+	.lunar-soft-ui a[class~='border']:hover {
+		box-shadow: none !important;
+	}
+
+	.lunar-soft-ui button[class*='border-black/10'],
+	.lunar-soft-ui a[class*='border-black/10'] {
+		background-color: rgba(80, 65, 45, 0.045);
+	}
+
+	.lunar-soft-ui button[class*='border-black/10']:hover,
+	.lunar-soft-ui a[class*='border-black/10']:hover {
+		background-color: rgba(80, 65, 45, 0.085);
+	}
+
+	.dark .lunar-soft-ui button[class*='border-black/10'],
+	.dark .lunar-soft-ui a[class*='border-black/10'] {
+		background-color: rgba(255, 255, 255, 0.045);
+	}
+
+	.dark .lunar-soft-ui button[class*='border-black/10']:hover,
+	.dark .lunar-soft-ui a[class*='border-black/10']:hover {
+		background-color: rgba(255, 255, 255, 0.085);
+	}
+
+	.lunar-soft-ui div[class*='rounded-2xl'][class*='border-black/10'],
+	.lunar-soft-ui section[class*='rounded-2xl'][class*='border-black/10'] {
+		border-color: transparent !important;
+		box-shadow: none !important;
+	}
+
+	.dark .lunar-soft-ui div[class*='rounded-2xl'][class*='border-white/10'],
+	.dark .lunar-soft-ui section[class*='rounded-2xl'][class*='border-white/10'] {
+		border-color: transparent !important;
+		box-shadow: none !important;
+	}
+}

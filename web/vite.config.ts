@@ -7,6 +7,10 @@ export default defineConfig(({ command }) => ({
 		port: Number(process.env.DEV_PORT) || 8125,
 		// LOOPBACK UNLESS THE LAUNCHER (OR THE DEVELOPER) ASKS FOR LAN WITH HOST=0.0.0.0
 		host: process.env.HOST || '127.0.0.1',
+		allowedHosts: (process.env.DEV_ALLOWED_HOSTS || '')
+			.split(',')
+			.map((host) => host.trim())
+			.filter(Boolean),
 	},
 	preview: {
 		port: Number(process.env.PORT) || 8124,

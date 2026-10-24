@@ -167,7 +167,7 @@
 <svelte:window on:scroll={handleScroll} />
 
 <!-- APP SHELL - THEMED SURFACE + TOP NAV -->
-<div class={THEME_CLASS[$settings.theme] + ' min-h-screen font-sans transition-colors duration-200'}>
+<div class={THEME_CLASS[$settings.theme] + ' lunar-soft-ui min-h-screen font-sans transition-colors duration-200'}>
 	<!-- TOP BAR -->
 	<header
 		class={`sticky top-0 z-30 border-b border-black/10 transition-all duration-300 backdrop-blur-md dark:border-white/10 ${THEME_BAR[$settings.theme]} ${
