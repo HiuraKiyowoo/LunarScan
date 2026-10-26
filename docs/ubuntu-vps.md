@@ -6,7 +6,15 @@ Panduan ini memasang Lunar langsung di Ubuntu—tanpa Termux atau `proot-distro`
 
 Gunakan Ubuntu 22.04/24.04 LTS pada VPS `x86_64` atau `aarch64` (ARM64). Disarankan minimal **4 vCPU, RAM 8 GB, dan 20 GB ruang disk kosong**. Inferensi OCR/deteksi/inpainting berjalan di CPU; satu halaman/concurrency 1 menjadi setelan awal yang lebih ramah RAM. Build Rust pertama kali bisa memakan waktu beberapa menit dan memakai ruang tambahan untuk cache Cargo/Node.
 
-Installer harus dijalankan oleh user biasa yang memiliki `sudo`, bukan sebagai `root`. Simpan checkout repo di folder home yang path-nya tidak mengandung spasi. Butuh koneksi internet saat mengunduh paket, dependency, dan sekitar **403 MB model ONNX**.
+Installer harus dijalankan oleh user biasa yang memiliki `sudo`, bukan sebagai `root`. Kalau SSH VPS-mu login sebagai `root` dan belum punya akun biasa, buat akun deployment dari shell root lalu pindah ke akun itu. Jangan jalankan server web sebagai root.
+
+```bash
+id lunar >/dev/null 2>&1 || adduser lunar
+usermod -aG sudo lunar
+su - lunar
+```
+
+Masuk ke akun tersebut sebelum mengikuti langkah instalasi di bawah. Kalau sudah punya akun biasa seperti `ubuntu`, pakai akun itu saja. Simpan checkout repo di folder home yang path-nya tidak mengandung spasi. Butuh koneksi internet saat mengunduh paket, dependency, dan sekitar **403 MB model ONNX**.
 
 ## Instalasi dan jalankan
 
