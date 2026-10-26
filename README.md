@@ -27,6 +27,20 @@ bash "$HOME/xianscan-termux/scripts/start-termux.sh"
 
 Buka **http://127.0.0.1:8125** di browser Android. Untuk berhenti, tekan `Ctrl+C` di Termux. Jalankan dari direktori privat Termux, bukan `/sdcard`.
 
+## Instalasi Ubuntu VPS
+
+Lunar juga bisa dibangun langsung di Ubuntu VPS tanpa `proot-distro`. Jalur ini membangun UI production dan backend CPU, mengunduh model ONNX, serta menyediakan service `systemd` agar otomatis hidup kembali setelah reboot. Disarankan Ubuntu 22.04/24.04 LTS, 4 vCPU, RAM 8 GB, dan 20 GB ruang kosong. Gunakan user biasa dengan akses `sudo`.
+
+```bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/HiuraKiyowoo/LunarScan.git "$HOME/LunarScan"
+cd "$HOME/LunarScan"
+bash scripts/install-ubuntu.sh
+sudo bash scripts/install-ubuntu-service.sh
+```
+
+Service bind ke localhost secara default. Akses privat lewat SSH tunnel atau gunakan reverse proxy HTTPS untuk domain; jangan buka port aplikasi `8124` maupun API ML `8123` langsung ke internet. Ikuti [panduan Ubuntu VPS](docs/ubuntu-vps.md) untuk akses remote, systemd, token, update, dan NaraRouter.
+
 ## Pakai NaraRouter untuk penerjemahan
 
 **Tidak perlu mengunduh LLM penerjemah lokal.** Lunar dapat mengirim permintaan penerjemahan ke layanan cloud seperti NaraRouter. Model ONNX tetap diunduh untuk tugas gambar lokal seperti deteksi balon/teks, OCR, dan inpainting; total model pada manifest saat ini sekitar 403 MB.
