@@ -1,0 +1,131 @@
+name: lunar-cpu-image-noavx
+
+# Varian untuk CPU lama TANPA AVX2 (mis. Xeon E5-2420 / Sandy Bridge).
+#
+# Akar masalah: ort memakai fitur `download-binaries` → biner ONNX Runtime dari CDN Pyke
+# yang dikompilasi dengan AVX2 → SIGILL (exit 132) di CPU yang tidak punya AVX2.
+# Solusi: pakai fitur `load-dynamic` + libonnxruntime.so RESMI dari wheel PyPI Microsoft,
+# yang terbukti jalan di CPU ini (rfdetr 768x768 ~10,8 s, 2 thread).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/lunar-noavx.yml"
+
+env:
+  TARGET: x86_64-unknown-linux-gnu
+  ASSET: xianscan-linux-x86_64.tar.gz
+  ORT_WHEEL: "1.31.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dependensi sistem
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential python3 libfontconfig1-dev unzip
+
+      - name: Build UI (SvelteKit) + native addon
+        working-directory: web
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+          yarn install --frozen-lockfile --ignore-scripts
+          npm rebuild better-sqlite3
+          test -f node_modules/better-sqlite3/build/Release/better_sqlite3.node
+          yarn build
+
+      - name: Unduh bobot model (ONNX)
+        run: bash scripts/fetch-models.sh
+
+      - name: Tempel runtime Node
+        run: |
+          mkdir -p web/bin && cp "$(which node)" web/bin/node && chmod +x web/bin/node
+
+      - name: Ambil ONNX Runtime resmi (tanpa AVX2)
+        run: |
+          pip download "onnxruntime==${ORT_WHEEL}" --no-deps -d /tmp/whl
+          cd /tmp/whl && unzip -o -q onnxruntime-*.whl -d x
+          SO=$(find x -name 'libonnxruntime.so*' -type f | head -1)
+          echo "ditemukan: $SO ($(du -h "$SO" | cut -f1))"
+          cp "$SO" "$GITHUB_WORKSPACE/libonnxruntime.so"
+          ls -la "$GITHUB_WORKSPACE/libonnxruntime.so"
+
+      - name: Ganti ort ke load-dynamic
+        run: |
+          sed -i 's/"download-binaries", "copy-dylibs"/"load-dynamic", "copy-dylibs"/' Cargo.toml
+          grep -n '^ort = ' Cargo.toml
+          grep -q '"load-dynamic"' Cargo.toml || { echo "patch Cargo.toml gagal"; exit 1; }
+          grep -q '"download-binaries"' Cargo.toml && { echo "masih ada download-binaries"; exit 1; } || true
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build binary CPU
+        run: |
+          cargo build --release --no-default-features \
+            --features embed-models,embed-web --target "$TARGET"
+
+      - name: Paketkan
+        run: |
+          mkdir -p staging
+          cp "target/$TARGET/release/xianscan" staging/xianscan
+          cp README.md LICENSE staging/ 2>/dev/null || true
+          chmod +x staging/xianscan
+          tar -czf "$ASSET" -C staging .
+          ls -lh "$ASSET"
+
+      - name: Simpan arsip
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lunar-linux-cpu-noavx
+          path: xianscan-linux-x86_64.tar.gz
+          retention-days: 7
+
+      - name: Dockerfile varian tanpa AVX2
+        run: |
+          cat > Dockerfile.noavx <<'DOCKER'
+          FROM ubuntu:24.04
+          RUN apt-get update \
+              && apt-get install -y --no-install-recommends ca-certificates libgomp1 fontconfig fonts-dejavu-core \
+              && rm -rf /var/lib/apt/lists/*
+          WORKDIR /app
+          COPY xianscan-linux-x86_64.tar.gz /tmp/arsip.tar.gz
+          RUN tar -xzf /tmp/arsip.tar.gz -C /app && rm -f /tmp/arsip.tar.gz && chmod 0755 /app/xianscan
+          COPY libonnxruntime.so /app/libonnxruntime.so
+          ENV ORT_DYLIB_PATH=/app/libonnxruntime.so \
+              XIANSCAN_APP_DIR=/app/runtime \
+              ONNX_THREADS=2
+          RUN mkdir -p /app/runtime /config
+          EXPOSE 8123 8124
+          VOLUME ["/config"]
+          CMD ["/app/xianscan"]
+          DOCKER
+
+      - name: Bangun & dorong image
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/xianscan"
+          docker build -f Dockerfile.noavx -t "$IMAGE:cpu-noavx-0.5.0-beta.8" -t "$IMAGE:cpu-noavx" .
+          docker push "$IMAGE:cpu-noavx-0.5.0-beta.8"
+          docker push "$IMAGE:cpu-noavx"
+          echo "IMAGE=$IMAGE:cpu-noavx-0.5.0-beta.8" >> "$GITHUB_ENV"
+
+      - name: Ringkas
+        run: |
+          echo "image: $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          echo "cocok untuk CPU tanpa AVX2 (Xeon Sandy Bridge dan sejenisnya)" >> "$GITHUB_STEP_SUMMARY"
