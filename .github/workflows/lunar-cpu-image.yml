@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   # glibc 2.35: jalan di ubuntu 24.04, Debian 12, dan runner ini
+    runs-on: ubuntu-24.04   # glibc 2.39 = sama dengan base image Dockerfile
     permissions:
       contents: read
       packages: write
