@@ -102,6 +102,7 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 	const canonical = getCanonicalSettings();
 	const parsed = translateChapterSchema.safeParse(await request.json().catch(() => null));
 	const force = parsed.success ? parsed.data.force : false;
+	const mode = parsed.success ? parsed.data.mode : 'translate';
 	const pageIds = parsed.success ? parsed.data.pageIds : undefined;
 	const inpaintMode = parsed.success && parsed.data.inpaintMode
 		? parsed.data.inpaintMode
@@ -133,6 +134,7 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 		inpaintExpansionPct,
 		enableTypesetCentering,
 		pageConcurrency,
+		redrawOnly: mode === 'redraw_only',
 		typesetOptions,
 		dataRoot: DATA_ROOT,
 		// THE CACHE MUST NEVER MIX PROVIDERS: MOCK ↔ REAL SWITCHES PRODUCE A FRESH KEY
@@ -160,6 +162,9 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 	// IF A JOB IS ALREADY RUNNING AND WE'RE NOT FORCING A SUPERSEDE, ADD THE NEW PAGES TO
 	// THE LIVE POOL INSTEAD OF ABORTING THE RUNNING JOB.
 	if (existingHandle && existingHandle.status === 'running' && !force) {
+		if (existingHandle.mode !== mode) {
+			throw error(409, 'A different chapter mode is already running. Cancel it before switching modes.');
+		}
 		if (pageIds && pageIds.length > 0) {
 			existingHandle.addPages(pageIds);
 		}
@@ -173,7 +178,7 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 			// INJECT PAGES INTO THE RUNNING PQUEUE WITHOUT SUPERSEDING THE JOB.
 			setChapterJobAddPage(chapterId, registerFn);
 		}),
-		{ force },
+		{ force, mode },
 	);
 	return createSseStream(handle);
 };
@@ -185,4 +190,3 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	const stopped = abortChapterJob(chapterId);
 	return json({ success: true, stopped });
 };
-

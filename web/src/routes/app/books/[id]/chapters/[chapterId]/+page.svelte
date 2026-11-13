@@ -698,15 +698,23 @@
 		}
 	}
 
-	async function startTranslation(force = false) {
-		const pendingPages = pages.filter((p) => p.status !== 'done');
+	async function startTranslation(force = false, mode: 'translate' | 'redraw_only' = 'translate') {
+		const pendingPages =
+			mode === 'redraw_only' ? pages.filter((p) => !p.cleanedPath) : pages.filter((p) => p.status !== 'done');
 		if (pendingPages.length === 0 && pages.length > 0 && !force) {
-			toast.info('All pages are already translated! Use Clear Progress to reset or translate individual pages.');
+			toast.info(
+				mode === 'redraw_only'
+					? 'Redraw images are already available for all pages. You can download the redraw-only ZIP.'
+					: 'All pages are already translated! Use Clear Progress to reset or translate individual pages.',
+			);
 			return;
 		}
 
 		try {
-			if (chapter && bookId) {
+			if (mode === 'redraw_only') {
+				toast.info('Redraw-only started: OCR and local inpainting only; LLM translation and typesetting are skipped.');
+				await jobTracker.startTranslation(chapterId, { force, mode });
+			} else if (chapter && bookId) {
 				await batchTracker.startBatch(
 					bookId,
 					bookTitle || 'Book Translation',
@@ -1312,10 +1320,11 @@
 		{uploading}
 		{exporting}
 		{exportProgress}
-		{activeViewMode}
-		{webtoonKind}
-		{webtoonWidth}
+			{activeViewMode}
+			{webtoonKind}
+			{webtoonWidth}
 		on:translate={() => startTranslation(false)}
+		on:redrawOnly={() => startTranslation(false, 'redraw_only')}
 		on:cancel={cancelTranslation}
 		on:clearProgress={() => (clearChapterConfirmOpen = true)}
 		on:clearAllPages={() => (clearChapterPagesConfirmOpen = true)}

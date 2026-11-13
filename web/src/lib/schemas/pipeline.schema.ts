@@ -3,6 +3,7 @@ import { SCRIPT_FONT_SLOTS, type ScriptFontSlot } from '$lib/typeset-scripts';
 
 export const translateChapterSchema = z.object({
 	force: z.boolean().default(false),
+	mode: z.enum(['translate', 'redraw_only']).optional().default('translate'),
 	pageIds: z.array(z.number().int().positive()).optional(),
 	inpaintMode: z.string().optional(),
 	enableWhiteInpaint: z.boolean().optional(),

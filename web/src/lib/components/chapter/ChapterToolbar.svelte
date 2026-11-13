@@ -40,6 +40,7 @@
 
 	const dispatch = createEventDispatcher<{
 		translate: void;
+		redrawOnly: void;
 		cancel: void;
 		clearProgress: void;
 		clearAllPages: void;
@@ -64,6 +65,12 @@
 					running
 						? { value: 'cancel', label: 'Cancel Translation', icon: Square, danger: true }
 						: { value: 'translate', label: 'Translate All', icon: Play, disabled: isReslicing },
+					{
+						value: 'redrawOnly',
+						label: 'Redraw only (skip LLM + typeset)',
+						icon: FileImage,
+						disabled: running || isReslicing,
+					},
 					{
 						value: 'reslice',
 						label: isReslicing ? `Re-slicing ${resliceProgress}%...` : 'Smart Re-slice',
@@ -94,6 +101,7 @@
 	function handleMenuAction(action: string) {
 		if (action === 'upload') fileInput?.click();
 		else if (action === 'translate') dispatch('translate');
+		else if (action === 'redrawOnly') dispatch('redrawOnly');
 		else if (action === 'cancel') dispatch('cancel');
 		else if (action === 'reslice') dispatch('openReslice');
 		else if (action === 'clearProgress') dispatch('clearProgress');
@@ -283,6 +291,17 @@
 					<span>Translate All</span>
 				</Button>
 			{/if}
+
+			<Button
+				variant="secondary"
+				size="sm"
+				disabled={running || isReslicing}
+				title="Run detection/OCR and inpainting only; skip LLM translation and typesetting"
+				on:click={() => dispatch('redrawOnly')}
+			>
+				<FileImage size={14} />
+				<span>Redraw only</span>
+			</Button>
 
 			<Button
 				variant="secondary"

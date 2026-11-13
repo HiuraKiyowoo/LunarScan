@@ -685,15 +685,16 @@ export function createJobTrackerStore() {
 		// TRIGGER TRANSLATION (ALL PENDING PAGES OR TARGETED PAGE IDS)
 		async startTranslation(
 			chapterId: number,
-			opts: { force?: boolean; pageIds?: number[]; pageConcurrency?: number } = {},
+			opts: { force?: boolean; pageIds?: number[]; pageConcurrency?: number; mode?: 'translate' | 'redraw_only' } = {},
 		): Promise<void> {
 			// A CHAPTER WAITING TO RECONNECT HAS NO STREAM TO REPORT A QUEUED PAGE: OPEN A FRESH ONE INSTEAD (connectStream
 			// ALSO CLEARS THE PENDING RECONNECT). THE TIMER IS LEFT ALONE WHEN A LIVE STREAM ONLY GETS A PAGE QUEUED.
 			const hasActiveStream = hasLiveController(chapterId) && !reconnectTimers.has(chapterId);
 			const curSettings = get(settings);
-			const reqBody = {
-				force: opts.force ?? false,
-				pageIds: opts.pageIds,
+				const reqBody = {
+					force: opts.force ?? false,
+					mode: opts.mode ?? 'translate',
+					pageIds: opts.pageIds,
 				inpaintMode: curSettings?.inpaintMode,
 				enableWhiteInpaint: curSettings?.enableWhiteInpaint,
 				inpaintExpansionPct: curSettings?.inpaintExpansionPct,

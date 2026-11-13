@@ -97,6 +97,8 @@ export interface ChapterPipelineDeps {
 	isPageCancelled?: (pageId: number) => boolean;
 	/** WHETHER TO FORCE RE-TRANSLATION OF ALL PAGES */
 	force?: boolean;
+	/** RUN DETECTION/OCR AND INPAINT ONLY; SKIP ALL LLM TRANSLATION AND TYPESETTING. */
+	redrawOnly?: boolean;
 	/** CUSTOM USER LOCALIZATION DIRECTIVES */
 	customPrompt?: string;
 }
@@ -354,7 +356,9 @@ export async function runChapterPipeline(
 			: book?.sourceLang || 'zh-Hans';
 	const pair: LangPair = { sourceLang: initialSource, targetLang: book?.targetLang || 'en' };
 	const model = resolveModel(deps.model);
-	warnIfScriptUncovered(chapterId, deps.typesetOptions, typesetScriptForBook(pair.targetLang, pair.sourceLang), emit);
+	if (!deps.redrawOnly) {
+		warnIfScriptUncovered(chapterId, deps.typesetOptions, typesetScriptForBook(pair.targetLang, pair.sourceLang), emit);
+	}
 
 	// DIALOGUE TRACKER: TRACKS OCR & TRANSLATED LINES ACROSS PAGES FOR SLIDING-WINDOW CONTEXT INJECTION
 	const dialogueTracker = new ChapterDialogueTracker();
@@ -503,7 +507,9 @@ export async function runChapterPipeline(
 		// WHOLE CHAPTER: SKIP ALREADY DONE PAGES UNLESS FORCE IS EXPLICITLY SET
 		return {
 			page,
-			outcome: !deps.force && page.status === 'done' ? 'done' : undefined,
+				outcome: !deps.force && (deps.redrawOnly ? Boolean(page.cleanedPath) : page.status === 'done' && Boolean(page.outputPath))
+					? 'done'
+					: undefined,
 		};
 	});
 
@@ -769,7 +775,7 @@ export async function runChapterPipeline(
 
 			// STREAM: PROCEED TO TRANSLATE THIS PAGE THE MOMENT ITS ANALYZE FINISHES (NO WAITING FOR OTHER
 			// PAGES' OCR). THE LLM CALL ITSELF IS SERIALIZED PER BOOK INSIDE translatePagePipeline.
-			activeStep = 'translate';
+			activeStep = deps.redrawOnly ? 'clean' : 'translate';
 			await translatePagePipeline(page, i, attempt);
 		} catch (e) {
 			slots[i].failedStep = activeStep;
@@ -790,7 +796,7 @@ export async function runChapterPipeline(
 		const analyzed = slot.analyzed;
 		if (!analyzed || slot.outcome !== 'analyzed' || deps.isPageCancelled?.(page.id)) return;
 		const image = slot.image!;
-		let activeStep: PipelineStep = 'match_glossary';
+		let activeStep: PipelineStep = deps.redrawOnly ? 'clean' : 'match_glossary';
 		let activeTranslateSubStep: PipelineStep = 'match_glossary';
 		let activeInpaintSubStep: PipelineStep = 'clean';
 		let pageTranslationError: string | undefined;
@@ -805,9 +811,10 @@ export async function runChapterPipeline(
 			const onParentAbort = () => pageAbortController.abort();
 			signal.addEventListener('abort', onParentAbort, { once: true });
 
-			const isRegionInpaintable = (r: PipelineRegion) => {
-				if (!r.text.trim()) return false;
-				const classification = classifyRegionForTranslation(
+				const isRegionInpaintable = (r: PipelineRegion) => {
+					if (!r.text.trim()) return false;
+					if (deps.redrawOnly) return true;
+					const classification = classifyRegionForTranslation(
 					{ id: r.id, text: r.text, kind: r.kind },
 					pair.sourceLang,
 					pair.targetLang,
@@ -973,7 +980,9 @@ export async function runChapterPipeline(
 
 			// ACCENT LABELS FOR THIS PAGE (FEAT-010): MODEL styles PLUS GLOSSARY technique MATCHES, SET BY THE TASK BELOW
 			let roleLabels = new Map<string, { role: RegionRole; source: RegionRoleSource }>();
-			const translateTask = (async () => {
+			const translateTask = deps.redrawOnly
+				? Promise.resolve(new Map<string, string>())
+				: (async () => {
 				const byRegion = new Map<string, string>();
 
 				if (sources.length > 0) {
@@ -1250,6 +1259,47 @@ export async function runChapterPipeline(
 
 			signal.throwIfAborted();
 			if (deps.isPageCancelled?.(page.id)) return;
+
+			if (deps.redrawOnly) {
+				db.update(pages)
+					.set({
+						status: 'pending',
+						error: null,
+						cleanedPath: cleanPath,
+						annotatedPath: null,
+						width: analyzed.width,
+						height: analyzed.height,
+					})
+					.where(eq(pages.id, page.id))
+					.run();
+				const freshRow = db
+					.select({ cleanedRev: pages.cleanedRev })
+					.from(pages)
+					.where(eq(pages.id, page.id))
+					.get();
+				slot.page.status = 'pending';
+				slot.page.cleanedPath = cleanPath;
+				slot.page.annotatedPath = null;
+				slot.totalDurationMs = performance.now() - pageT0;
+				slot.outcome = 'done';
+				// RELEASE THE SOURCE IMAGE AND OCR REGIONS BEFORE MOVING TO THE NEXT PAGE.
+				slot.image = undefined;
+				slot.analyzed = undefined;
+				emit({
+					type: 'page-done',
+					chapterId,
+					page: i,
+					pageSeq: page.seq,
+					seq: page.seq,
+					pageId: page.id,
+					pageCount: slots.length,
+					cleanedPath: cleanPath,
+					cleanedRev: freshRow?.cleanedRev ?? page.cleanedRev + 1,
+					durationMs: slot.totalDurationMs,
+				});
+				syncBus.broadcast({ type: 'pages-updated', chapterId, pageId: page.id });
+				return;
+			}
 
 			// 4) WRITE TRANSLATIONS BACK TO REGION ROWS
 			activeStep = 'persist_translations';
@@ -1664,7 +1714,7 @@ export async function runChapterPipeline(
 	const finalStatus = anyError ? 'error' : allDone ? 'done' : 'pending';
 
 	// NULLIFY ANNOTATED PATH IN DATABASE FOR PAGES THAT COMPLETED OR FAILED
-	const nonProcessingPages = finalPages.filter((p) => p.status === 'done' || p.status === 'error');
+	const nonProcessingPages = finalPages.filter((p) => deps.redrawOnly || p.status === 'done' || p.status === 'error');
 	if (nonProcessingPages.length > 0) {
 		const targetIds = nonProcessingPages.map((p) => p.id);
 		db.update(pages)

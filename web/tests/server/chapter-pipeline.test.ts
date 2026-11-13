@@ -132,6 +132,33 @@ async function run(chapterId: number, llm: OpenAI) {
 // -- TESTS -- //
 
 describe('runChapterPipeline', () => {
+	it('runs redraw-only without calling the LLM or typesetter and leaves the page ready for translation', async () => {
+		const { chapter, page } = seedChapterWithPage('redraw-only.png');
+		const { typesetPage } = await import('$lib/server/typeset');
+		vi.mocked(typesetPage).mockClear();
+		const create = vi.fn();
+		const llm = { chat: { completions: { create } } } as unknown as OpenAI;
+		const events: string[] = [];
+
+		await chapterWork(chapter.id, { pipeline, dataRoot, llm, redrawOnly: true })(
+			new AbortController().signal,
+			(e) => events.push(e.type),
+		);
+
+		const storedPage = db.select().from(pages).where(eq(pages.id, page.id)).get();
+		expect(pipeline.analyzeCalls).toBe(1);
+		expect(pipeline.cleanCalls).toBe(1);
+		expect(create).not.toHaveBeenCalled();
+		expect(vi.mocked(typesetPage)).not.toHaveBeenCalled();
+		expect(storedPage?.status).toBe('pending');
+		expect(storedPage?.cleanedPath).toBe(`clean/${chapter.id}/0.webp`);
+		expect(storedPage?.outputPath).toBeNull();
+		expect(existsSync(join(dataRoot, storedPage!.cleanedPath!))).toBe(true);
+		expect(db.select().from(regions).where(eq(regions.pageId, page.id)).all()).toHaveLength(1);
+		expect(db.select().from(translations).where(eq(translations.pageId, page.id)).all()).toHaveLength(0);
+		expect(events).toContain('page-done');
+	});
+
 	it('warns once per chapter when no installed font covers the book script (FEAT-006)', async () => {
 		const coverage = await import('$lib/server/typeset/coverage');
 		const actual = await vi.importActual<typeof import('$lib/server/typeset/coverage')>('$lib/server/typeset/coverage');

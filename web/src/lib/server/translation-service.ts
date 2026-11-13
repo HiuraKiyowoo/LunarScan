@@ -75,6 +75,7 @@ export interface JobEvent {
 
 export interface JobHandle {
 	key: string;
+	mode: 'translate' | 'redraw_only';
 	status: JobStatus;
 	snapshot: ChapterJobSnapshot | null;
 	/** SUBSCRIBE TO FUTURE EVENTS; IMMEDIATELY REPLAYS THE BUFFERED ONES. RETURNS AN UNSUBSCRIBE FN.
@@ -97,6 +98,7 @@ export interface ChapterJobWork {
 interface Job {
 	key: string;
 	chapterId: number;
+	mode: 'translate' | 'redraw_only';
 	status: JobStatus;
 	controller: AbortController;
 	events: JobEvent[];
@@ -630,12 +632,21 @@ async function run(
 
 // -- PUBLIC API -- //
 
-export function startChapterJob(chapterId: number, work: ChapterJobWork, opts: { force?: boolean } = {}): JobHandle {
+export function startChapterJob(
+	chapterId: number,
+	work: ChapterJobWork,
+	opts: { force?: boolean; mode?: 'translate' | 'redraw_only' } = {},
+): JobHandle {
 	const key = `chapter:${chapterId}`;
 	const existing = jobs.get(key);
 	let previousSettled: Promise<void> | undefined;
 	if (existing && existing.status === 'running' && !existing.controller.signal.aborted) {
-		if (!opts.force) return toHandle(existing);
+		if (!opts.force) {
+			if (existing.mode !== (opts.mode ?? 'translate')) {
+				throw new Error('A different chapter mode is already running. Cancel it before switching modes.');
+			}
+			return toHandle(existing);
+		}
 		// SUPERSEDE: THE NEW RUN REPLACES THE OLD ONE, BUT ONLY STARTS WORK ONCE THE OLD ONE HAS STOPPED
 		existing.status = 'superseded';
 		existing.snapshot.status = 'superseded';
@@ -669,6 +680,7 @@ export function startChapterJob(chapterId: number, work: ChapterJobWork, opts: {
 	const job: Job = {
 		key,
 		chapterId,
+		mode: opts.mode ?? 'translate',
 		status: 'running',
 		controller: new AbortController(),
 		events: [],
@@ -824,6 +836,7 @@ export function getChapterJobSnapshot(chapterId: number): ChapterJobSnapshot | n
 function toHandle(job: Job): JobHandle {
 	return {
 		key: job.key,
+		mode: job.mode,
 		// A GETTER — THE STATUS MUST REFLECT THE LIVE JOB, NOT THE VALUE AT HANDLE-CREATION TIME
 		get status() {
 			return job.status;
