@@ -1,0 +1,97 @@
+name: lunar-cpu-image
+
+# Build Lunar varian CPU (tanpa CUDA) lalu publikasikan image Docker ke GHCR.
+# Dipakai supaya VPS cukup "docker pull" — tidak perlu build Rust 20-30 menit
+# (dan tidak jadi masalah kalau instance VPS ke-reset).
+#
+# Kenapa bukan workflow release bawaan: matriks Linux-nya memakai fitur `cuda`,
+# sehingga ort-sys mencoba mengunduh ONNX Runtime varian cuda13 dan gagal di runner.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/lunar-cpu-image.yml"
+
+env:
+  TARGET: x86_64-unknown-linux-gnu
+  ASSET: xianscan-linux-x86_64.tar.gz
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Dependensi sistem
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential python3 libfontconfig1-dev
+
+      - name: Build UI (SvelteKit) + native addon
+        working-directory: web
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+          yarn install --frozen-lockfile --ignore-scripts
+          npm rebuild better-sqlite3
+          test -f node_modules/better-sqlite3/build/Release/better_sqlite3.node
+          yarn build
+
+      - name: Unduh bobot model (ONNX)
+        run: |
+          bash scripts/fetch-models.sh
+          du -sh models; ls -1 models/*.onnx | wc -l
+
+      - name: Tempel runtime Node ke binary (embed)
+        run: |
+          mkdir -p web/bin
+          cp "$(which node)" web/bin/node
+          chmod +x web/bin/node
+          echo "node tertempel: $(web/bin/node --version) (diharapkan v$(tr -d '[:space:]' < .nvmrc))"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Build binary CPU (tanpa cuda)
+        run: |
+          cargo build --release --no-default-features \
+            --features embed-models,embed-web --target "$TARGET"
+
+      - name: Paketkan arsip rilis
+        run: |
+          mkdir -p staging
+          cp "target/$TARGET/release/xianscan" staging/xianscan
+          cp README.md LICENSE staging/ 2>/dev/null || true
+          chmod +x staging/xianscan
+          tar -czf "$ASSET" -C staging .
+          ls -lh "$ASSET"
+
+      - name: Bangun & dorong image Docker
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/xianscan"
+          docker build -t "$IMAGE:cpu-0.5.0-beta.8" -t "$IMAGE:cpu-latest" .
+          docker push "$IMAGE:cpu-0.5.0-beta.8"
+          docker push "$IMAGE:cpu-latest"
+          echo "IMAGE=$IMAGE:cpu-0.5.0-beta.8" >> "$GITHUB_ENV"
+
+      - name: Ringkas
+        run: |
+          echo "image : $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          echo "jalankan di VPS:" >> "$GITHUB_STEP_SUMMARY"
+          echo '  docker run -d --name lunar -p 127.0.0.1:8124:8124 -v xianscan-config:/config '"$IMAGE" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lunar-linux-cpu
+          path: xianscan-linux-x86_64.tar.gz
+          retention-days: 7
