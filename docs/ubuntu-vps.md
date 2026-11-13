@@ -1,10 +1,10 @@
-# Menjalankan Lunar di Ubuntu VPS
+# Menjalankan Lunar di Ubuntu/Debian VPS
 
-Panduan ini memasang Lunar langsung di Ubuntu—tanpa Termux atau `proot-distro`. Installer membangun backend Rust dan UI SvelteKit production di VPS, lalu mengunduh model ONNX untuk deteksi, OCR, dan inpainting lokal. Penerjemahan LLM tetap bisa memakai layanan cloud seperti NaraRouter.
+Panduan ini memasang Lunar langsung di Ubuntu atau Debian—tanpa Termux atau `proot-distro`. Installer membangun backend Rust dan UI SvelteKit production di VPS, lalu mengunduh model ONNX untuk deteksi, OCR, dan inpainting lokal. Penerjemahan LLM tetap bisa memakai layanan cloud seperti NaraRouter.
 
 ## Kebutuhan
 
-Gunakan Ubuntu 22.04/24.04 LTS pada VPS `x86_64` atau `aarch64` (ARM64). Disarankan minimal **4 vCPU, RAM 8 GB, dan 20 GB ruang disk kosong**. Inferensi OCR/deteksi/inpainting berjalan di CPU; satu halaman/concurrency 1 menjadi setelan awal yang lebih ramah RAM. Build Rust pertama kali bisa memakan waktu beberapa menit dan memakai ruang tambahan untuk cache Cargo/Node.
+Gunakan Ubuntu 22.04/24.04 LTS atau Debian 12/13 pada VPS `x86_64` atau `aarch64` (ARM64). Disarankan minimal **4 vCPU, RAM 8 GB, dan 20 GB ruang disk kosong**. Spesifikasi VPS 11 vCPU, RAM 10 GB, dan disk 64 GB memadai untuk dicoba. Build pertama bisa memanfaatkan lebih banyak CPU dengan `CARGO_BUILD_JOBS=4`, sementara inferensi sebaiknya tetap mulai dari satu halaman/concurrency 1 agar penggunaan RAM terkendali. Build Rust juga memakai ruang tambahan untuk cache Cargo/Node.
 
 Installer harus dijalankan oleh user biasa yang memiliki `sudo`, bukan sebagai `root`. Kalau SSH VPS-mu login sebagai `root` dan belum punya akun biasa, buat akun deployment dari shell root lalu pindah ke akun itu. Jangan jalankan server web sebagai root.
 
@@ -27,7 +27,7 @@ cd "$HOME/LunarScan"
 bash scripts/install-ubuntu.sh
 ```
 
-Installer memasang paket build Ubuntu, Rust stable, Node.js sesuai `.nvmrc` (saat ini 24.18.1), Yarn, dependency UI, model, kemudian membangun UI production dan binary CPU. Build Cargo dibatasi 2 job secara default agar penggunaan RAM lebih terkendali. Jika VPS lebih besar, jumlahnya bisa diubah, misalnya:
+Installer memasang paket build dengan APT, Rust stable, Node.js sesuai `.nvmrc` (saat ini 24.18.1), Yarn, dependency UI, model, kemudian membangun UI production dan binary CPU. Build Cargo dibatasi 2 job secara default agar penggunaan RAM lebih terkendali. Jika VPS memiliki resource seperti 11 vCPU/10 GB RAM, jumlahnya bisa dinaikkan ke 4, misalnya:
 
 ```bash
 CARGO_BUILD_JOBS=4 bash scripts/install-ubuntu.sh

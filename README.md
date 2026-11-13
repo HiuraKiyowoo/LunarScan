@@ -27,9 +27,9 @@ bash "$HOME/xianscan-termux/scripts/start-termux.sh"
 
 Buka **http://127.0.0.1:8125** di browser Android. Untuk berhenti, tekan `Ctrl+C` di Termux. Jalankan dari direktori privat Termux, bukan `/sdcard`.
 
-## Instalasi Ubuntu VPS
+## Instalasi Ubuntu/Debian VPS
 
-Lunar juga bisa dibangun langsung di Ubuntu VPS tanpa `proot-distro`. Jalur ini membangun UI production dan backend CPU, mengunduh model ONNX, serta menyediakan service `systemd` agar otomatis hidup kembali setelah reboot. Disarankan Ubuntu 22.04/24.04 LTS, 4 vCPU, RAM 8 GB, dan 20 GB ruang kosong. Gunakan user biasa dengan akses `sudo`.
+Lunar juga bisa dibangun langsung di Ubuntu atau Debian VPS tanpa `proot-distro`. Jalur ini membangun UI production dan backend CPU, mengunduh model ONNX, serta menyediakan service `systemd` agar otomatis hidup kembali setelah reboot. Didukung Ubuntu 22.04/24.04 LTS dan Debian 12/13. Jika login sebagai `root`, ikuti langkah membuat user deployment di [panduan server](docs/ubuntu-vps.md). Spesifikasi 11 vCPU, RAM 10 GB, dan disk 64 GB cukup untuk dicoba; mulai dengan satu halaman/concurrency 1.
 
 ```bash
 sudo apt update && sudo apt install -y git

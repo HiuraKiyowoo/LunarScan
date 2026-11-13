@@ -13,8 +13,8 @@ if [[ ! -f /etc/os-release ]]; then
 fi
 # shellcheck disable=SC1091
 source /etc/os-release
-if [[ "${ID:-}" != "ubuntu" ]]; then
-  echo "Installer ini ditujukan untuk Ubuntu; terdeteksi: ${PRETTY_NAME:-unknown}." >&2
+if [[ "${ID:-}" != "ubuntu" && "${ID:-}" != "debian" ]]; then
+  echo "Installer ini ditujukan untuk Ubuntu atau Debian; terdeteksi: ${PRETTY_NAME:-unknown}." >&2
   exit 2
 fi
 if [[ "$(uname -m)" != "x86_64" && "$(uname -m)" != "aarch64" ]]; then
@@ -67,7 +67,7 @@ bash scripts/fetch-models.sh
 printf '\n== Build CPU backend (Cargo jobs: %s) ==\n' "${CARGO_BUILD_JOBS:-2}"
 CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}" cargo build --release --no-default-features -j "${CARGO_BUILD_JOBS:-2}"
 
-printf '\nSetup build Ubuntu selesai. Model: %s/models\n' "$ROOT"
+printf '\nSetup build Linux (Ubuntu/Debian) selesai. Model: %s/models\n' "$ROOT"
 printf 'Jalankan sekarang: %s/scripts/start-ubuntu.sh\n' "$ROOT"
 printf 'Pasang service systemd: sudo bash %s/scripts/install-ubuntu-service.sh\n' "$ROOT"
 printf 'Panduan lengkap: %s/docs/ubuntu-vps.md\n' "$ROOT"
