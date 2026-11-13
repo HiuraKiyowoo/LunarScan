@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04   # glibc 2.35: jalan di ubuntu 24.04, Debian 12, dan runner ini
     permissions:
       contents: read
       packages: write
@@ -75,6 +75,14 @@ jobs:
           tar -czf "$ASSET" -C staging .
           ls -lh "$ASSET"
 
+      - name: Simpan arsip (selalu, walau docker gagal)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lunar-linux-cpu
+          path: xianscan-linux-x86_64.tar.gz
+          retention-days: 7
+
       - name: Bangun & dorong image Docker
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
@@ -90,8 +98,3 @@ jobs:
           echo "jalankan di VPS:" >> "$GITHUB_STEP_SUMMARY"
           echo '  docker run -d --name lunar -p 127.0.0.1:8124:8124 -v xianscan-config:/config '"$IMAGE" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: lunar-linux-cpu
-          path: xianscan-linux-x86_64.tar.gz
-          retention-days: 7
