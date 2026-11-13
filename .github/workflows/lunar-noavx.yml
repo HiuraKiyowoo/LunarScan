@@ -85,6 +85,10 @@ jobs:
           cp "target/$TARGET/release/xianscan" staging/xianscan
           cp README.md LICENSE staging/ 2>/dev/null || true
           chmod +x staging/xianscan
+          # .dockerignore repo bersifat allowlist (hanya Dockerfile + arsip), jadi
+          # libonnxruntime.so HARUS ikut di dalam arsip, bukan disalin terpisah.
+          cp libonnxruntime.so staging/libonnxruntime.so
+          ls -la staging
           tar -czf "$ASSET" -C staging .
           ls -lh "$ASSET"
 
@@ -106,7 +110,6 @@ jobs:
           WORKDIR /app
           COPY xianscan-linux-x86_64.tar.gz /tmp/arsip.tar.gz
           RUN tar -xzf /tmp/arsip.tar.gz -C /app && rm -f /tmp/arsip.tar.gz && chmod 0755 /app/xianscan
-          COPY libonnxruntime.so /app/libonnxruntime.so
           ENV ORT_DYLIB_PATH=/app/libonnxruntime.so \
               XIANSCAN_APP_DIR=/app/runtime \
               ONNX_THREADS=2
