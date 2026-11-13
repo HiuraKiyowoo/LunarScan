@@ -751,20 +751,21 @@
 		if (pendingExportUrls.delete(url)) URL.revokeObjectURL(url);
 	}
 
-	// EXPORT THE CHAPTER AS A FOLDER-BASED ZIP WITH LIVE PROGRESS FEEDBACK.
-	async function exportChapterZip() {
+	// EXPORT TRANSLATED OR REDRAW-ONLY PAGES AS A FOLDER-BASED ZIP WITH LIVE PROGRESS FEEDBACK.
+	async function exportChapterZip(mode: 'translated' | 'redraw' = 'translated') {
 		if (exporting || !chapter) return;
 		exporting = true;
 		exportProgress = 0;
-		const toastId = toast.loading('Preparing ZIP...');
+		const toastId = toast.loading(mode === 'redraw' ? 'Preparing redraw-only ZIP...' : 'Preparing ZIP...');
 		try {
-			const resp = await fetch(`/api/chapters/${chapter.id}/download`);
+			const downloadPath = `/api/chapters/${chapter.id}/download${mode === 'redraw' ? '?mode=redraw' : ''}`;
+			const resp = await fetch(downloadPath);
 			if (!resp.ok) {
 				const body = await resp.json().catch(() => null);
 				throw new Error((body as { message?: string } | null)?.message || 'Export failed.');
 			}
 			const total = Number(resp.headers.get('content-length') || 0);
-			const doneToast = zipExportToast(resp.headers.get('x-missing-pages'));
+			const doneToast = zipExportToast(resp.headers.get('x-missing-pages'), mode);
 			const reader = resp.body?.getReader();
 			if (!reader) throw new Error('Download stream unavailable.');
 			let chunks: BlobPart[] = [];
@@ -785,7 +786,9 @@
 			const anchor = document.createElement('a');
 			const rawName = (chapter.titleTarget || chapter.title || `Chapter ${chapter.seq + 1}`).trim();
 			anchor.href = url;
-			anchor.download = `${chapterArchiveName(rawName, `chapter_${chapter.id}`)}.zip`;
+			const archiveTitle = mode === 'redraw' ? `${rawName}_redraw` : rawName;
+			const fallbackName = `chapter_${chapter.id}${mode === 'redraw' ? '_redraw' : ''}`;
+			anchor.download = `${chapterArchiveName(archiveTitle, fallbackName)}.zip`;
 			// SOME FIREFOX VERSIONS ONLY FOLLOW A DOWNLOAD ANCHOR THAT IS IN THE DOCUMENT
 			anchor.style.display = 'none';
 			document.body.appendChild(anchor);
@@ -1318,7 +1321,8 @@
 		on:clearAllPages={() => (clearChapterPagesConfirmOpen = true)}
 		on:openReslice={() => (resliceModalOpen = true)}
 		on:editChapter={openEditChapterModal}
-		on:exportZip={exportChapterZip}
+		on:exportZip={() => exportChapterZip('translated')}
+		on:exportRedrawZip={() => exportChapterZip('redraw')}
 		on:upload={(e) => uploadFiles(e.detail)}
 		on:changeViewMode={(e) => settings.update((s) => ({ ...s, readerViewMode: e.detail }))}
 		on:changeWebtoonKind={(e) => settings.update((s) => ({ ...s, webtoonKind: e.detail }))}

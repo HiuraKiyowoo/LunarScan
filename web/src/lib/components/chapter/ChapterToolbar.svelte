@@ -7,6 +7,7 @@
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import Upload from 'lucide-svelte/icons/upload';
 	import Download from 'lucide-svelte/icons/download';
+	import FileImage from 'lucide-svelte/icons/file-image';
 	import Loader2 from 'lucide-svelte/icons/loader-2';
 	import Play from 'lucide-svelte/icons/play';
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
@@ -45,6 +46,7 @@
 		openReslice: void;
 		editChapter: void;
 		exportZip: void;
+		exportRedrawZip: void;
 		upload: FileList;
 		changeViewMode: 'reader' | 'grid' | 'compare';
 		changeWebtoonKind: 'output' | 'original';
@@ -77,6 +79,12 @@
 						icon: exporting ? Loader2 : Download,
 						disabled: exporting || running || isReslicing,
 					},
+					{
+						value: 'exportRedrawZip',
+						label: exporting ? `Exporting ${exportProgress}%` : 'Export redraw-only ZIP',
+						icon: exporting ? Loader2 : FileImage,
+						disabled: exporting || running || isReslicing,
+					},
 					{ value: 'clearAllPages', label: 'Clear Pages', icon: FileX, danger: true, disabled: running || isReslicing },
 				]
 			: []),
@@ -92,6 +100,7 @@
 		else if (action === 'clearAllPages') dispatch('clearAllPages');
 		else if (action === 'editChapter') dispatch('editChapter');
 		else if (action === 'exportZip') dispatch('exportZip');
+		else if (action === 'exportRedrawZip') dispatch('exportRedrawZip');
 	}
 
 	function handleFileChange(e: Event) {
@@ -289,7 +298,21 @@
 				{/if}
 				<span>{exporting ? `Exporting ${exportProgress}%` : 'Export ZIP'}</span>
 			</Button>
-		{/if}
+			<Button
+				variant="secondary"
+				size="sm"
+				disabled={exporting || running || isReslicing}
+				title="Download only redrawn pages without typeset text"
+				on:click={() => dispatch('exportRedrawZip')}
+			>
+				{#if exporting}
+					<Loader2 size={14} class="animate-spin" />
+				{:else}
+					<FileImage size={14} />
+				{/if}
+				<span>{exporting ? `Exporting ${exportProgress}%` : 'Redraw-only ZIP'}</span>
+			</Button>
+			{/if}
 	</div>
 
 	<!-- EXPORT PROGRESS BAR — VISIBLE WHILE THE ZIP IS BEING ASSEMBLED AND DOWNLOADED -->

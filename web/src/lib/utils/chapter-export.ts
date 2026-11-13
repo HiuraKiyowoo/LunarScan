@@ -10,13 +10,17 @@ export interface ZipExportToast {
 
 // -- FUNCTIONS -- //
 
-export function zipExportToast(missingPagesHeader: string | null): ZipExportToast {
+export function zipExportToast(
+	missingPagesHeader: string | null,
+	mode: 'translated' | 'redraw' = 'translated',
+): ZipExportToast {
+	const label = mode === 'redraw' ? 'Redraw-only ZIP exported.' : 'ZIP exported.';
 	const missing = Number(missingPagesHeader ?? 0);
-	if (!Number.isFinite(missing) || missing <= 0) return { kind: 'success', message: 'ZIP exported.' };
+	if (!Number.isFinite(missing) || missing <= 0) return { kind: 'success', message: label };
 	const pagesWord = missing === 1 ? 'page' : 'pages';
 	return {
 		kind: 'warning',
-		message: `ZIP exported. ${missing} ${pagesWord} could not be included; see MISSING_PAGES.txt.`,
+		message: `${label} ${missing} ${pagesWord} could not be included; see MISSING_PAGES.txt.`,
 	};
 }
 

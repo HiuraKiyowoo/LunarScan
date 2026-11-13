@@ -12,6 +12,7 @@
 	import Square from 'lucide-svelte/icons/square';
 	import Play from 'lucide-svelte/icons/play';
 	import Download from 'lucide-svelte/icons/download';
+	import FileImage from 'lucide-svelte/icons/file-image';
 	import Loader2 from 'lucide-svelte/icons/loader-2';
 	import Languages from 'lucide-svelte/icons/languages';
 	import ExternalLink from 'lucide-svelte/icons/external-link';
@@ -458,6 +459,15 @@
 						<Download size={13} />
 						<span class="text-[11px]">ZIP</span>
 					</a>
+					<a
+						href={`/api/chapters/${chapter.id}/download?mode=redraw`}
+						class="inline-flex items-center gap-1 opacity-60 transition hover:text-[#b23a2e] hover:opacity-100"
+						download
+						title="Download redraw-only ZIP without typeset text"
+					>
+						<FileImage size={13} />
+						<span class="text-[11px]">Redraw</span>
+					</a>
 				{/if}
 			</div>
 		</div>
@@ -612,6 +622,14 @@
 					title="Download ZIP"
 				>
 					<Download size={14} />
+				</a>
+				<a
+					href={`/api/chapters/${chapter.id}/download?mode=redraw`}
+					class="hidden items-center justify-center p-1.5 opacity-60 hover:text-[#b23a2e] hover:opacity-100 sm:inline-flex"
+					download
+					title="Download redraw-only ZIP without typeset text"
+				>
+					<FileImage size={14} />
 				</a>
 			{/if}
 
