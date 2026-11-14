@@ -58,19 +58,34 @@
 
 	let fileInput: HTMLInputElement;
 
-	$: chapterMenuItems = [
-		{ value: 'upload', label: uploading ? 'Uploading...' : 'Add Images', icon: Upload, disabled: uploading || running || isReslicing },
+	$: processMenuItems = [
+		running
+			? { value: 'cancel', label: 'Cancel process', icon: Square, danger: true }
+			: { value: 'translate', label: 'Translate + Typeset', icon: Play, disabled: isReslicing },
+		{
+			value: 'redrawOnly',
+			label: 'Redraw only (skip LLM + typeset)',
+			icon: FileImage,
+			disabled: running || isReslicing,
+		},
+	] as MenuAction[];
+	$: downloadMenuItems = [
+		{
+			value: 'exportZip',
+			label: exporting ? `Exporting ${exportProgress}%` : 'Full output ZIP',
+			icon: exporting ? Loader2 : Download,
+			disabled: exporting || running || isReslicing,
+		},
+		{
+			value: 'exportRedrawZip',
+			label: exporting ? `Exporting ${exportProgress}%` : 'Redraw images ZIP',
+			icon: exporting ? Loader2 : FileImage,
+			disabled: exporting || running || isReslicing,
+		},
+	] as MenuAction[];
+	$: otherMenuItems = [
 		...(totalPages > 0
 			? [
-					running
-						? { value: 'cancel', label: 'Cancel Translation', icon: Square, danger: true }
-						: { value: 'translate', label: 'Translate All', icon: Play, disabled: isReslicing },
-					{
-						value: 'redrawOnly',
-						label: 'Redraw only (skip LLM + typeset)',
-						icon: FileImage,
-						disabled: running || isReslicing,
-					},
 					{
 						value: 'reslice',
 						label: isReslicing ? `Re-slicing ${resliceProgress}%...` : 'Smart Re-slice',
@@ -80,18 +95,6 @@
 					...(hasProgress
 						? [{ value: 'clearProgress', label: 'Clear Progress', icon: RotateCcw, disabled: running || isReslicing }]
 						: []),
-					{
-						value: 'exportZip',
-						label: exporting ? `Exporting ${exportProgress}%` : 'Export ZIP',
-						icon: exporting ? Loader2 : Download,
-						disabled: exporting || running || isReslicing,
-					},
-					{
-						value: 'exportRedrawZip',
-						label: exporting ? `Exporting ${exportProgress}%` : 'Export redraw-only ZIP',
-						icon: exporting ? Loader2 : FileImage,
-						disabled: exporting || running || isReslicing,
-					},
 					{ value: 'clearAllPages', label: 'Clear Pages', icon: FileX, danger: true, disabled: running || isReslicing },
 				]
 			: []),
@@ -271,67 +274,72 @@
 				<span>Clear Pages</span>
 			</Button>
 
-			{#if running}
-				<Button
-					variant="danger"
-					size="sm"
-					on:click={() => dispatch('cancel')}
-				>
-					<Square size={12} class="fill-current" />
-					<span>Cancel</span>
-				</Button>
-			{:else}
-				<Button
-					variant="primary"
-					size="sm"
-					disabled={isReslicing}
-					on:click={() => dispatch('translate')}
-				>
-					<Play size={14} />
-					<span>Translate All</span>
-				</Button>
-			{/if}
+			<div
+				class="flex flex-col items-start gap-1 rounded-xl border border-[#b23a2e]/15 bg-[#b23a2e]/[0.025] p-1.5 dark:border-[#e08a63]/15"
+			>
+				<span class="px-1 text-[9px] font-bold tracking-[0.16em] opacity-50">PROSES</span>
+				<div class="flex items-center gap-1.5">
+					{#if running}
+						<Button variant="danger" size="sm" on:click={() => dispatch('cancel')}>
+							<Square size={12} class="fill-current" />
+							<span>Cancel</span>
+						</Button>
+					{:else}
+						<Button variant="primary" size="sm" disabled={isReslicing} on:click={() => dispatch('translate')}>
+							<Play size={14} />
+							<span>Translate + Typeset</span>
+						</Button>
+					{/if}
 
-			<Button
-				variant="secondary"
-				size="sm"
-				disabled={running || isReslicing}
-				title="Run detection/OCR and inpainting only; skip LLM translation and typesetting"
-				on:click={() => dispatch('redrawOnly')}
-			>
-				<FileImage size={14} />
-				<span>Redraw only</span>
-			</Button>
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={running || isReslicing}
+						title="Run detection/OCR and inpainting only; skip LLM translation and typesetting"
+						on:click={() => dispatch('redrawOnly')}
+					>
+						<FileImage size={14} />
+						<span>Redraw only</span>
+					</Button>
+				</div>
+			</div>
 
-			<Button
-				variant="secondary"
-				size="sm"
-				disabled={exporting || running}
-				title="Download this chapter as a ZIP (folder-based)"
-				on:click={() => dispatch('exportZip')}
+			<div
+				class="flex flex-col items-start gap-1 rounded-xl border border-black/10 bg-black/[0.02] p-1.5 dark:border-white/10 dark:bg-white/[0.02]"
 			>
-				{#if exporting}
-					<Loader2 size={14} class="animate-spin" />
-				{:else}
-					<Download size={14} />
-				{/if}
-				<span>{exporting ? `Exporting ${exportProgress}%` : 'Export ZIP'}</span>
-			</Button>
-			<Button
-				variant="secondary"
-				size="sm"
-				disabled={exporting || running || isReslicing}
-				title="Download only redrawn pages without typeset text"
-				on:click={() => dispatch('exportRedrawZip')}
-			>
-				{#if exporting}
-					<Loader2 size={14} class="animate-spin" />
-				{:else}
-					<FileImage size={14} />
-				{/if}
-				<span>{exporting ? `Exporting ${exportProgress}%` : 'Redraw-only ZIP'}</span>
-			</Button>
-			{/if}
+				<span class="px-1 text-[9px] font-bold tracking-[0.16em] opacity-50">UNDUH</span>
+				<div class="flex items-center gap-1.5">
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={exporting || running || isReslicing}
+						title="Download chapter with typeset output"
+						on:click={() => dispatch('exportZip')}
+					>
+						{#if exporting}
+							<Loader2 size={14} class="animate-spin" />
+						{:else}
+							<Download size={14} />
+						{/if}
+						<span>{exporting ? `Exporting ${exportProgress}%` : 'Full output ZIP'}</span>
+					</Button>
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={exporting || running || isReslicing}
+						title="Download only redrawn pages without typeset text"
+						on:click={() => dispatch('exportRedrawZip')}
+					>
+						{#if exporting}
+							<Loader2 size={14} class="animate-spin" />
+						{:else}
+							<FileImage size={14} />
+						{/if}
+						<span>{exporting ? `Exporting ${exportProgress}%` : 'Redraw images ZIP'}</span>
+					</Button>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- EXPORT PROGRESS BAR — VISIBLE WHILE THE ZIP IS BEING ASSEMBLED AND DOWNLOADED -->
@@ -351,48 +359,39 @@
 		</div>
 	{/if}
 
-	<!-- NARROW SCREEN: PRIMARY BUTTON + VERTICAL ELLIPSIS POPOVER MENU -->
-	<div class="flex sm:hidden items-center justify-center gap-2 pt-0.5 w-full">
-		<Button
-			variant="secondary"
-			size="sm"
-			disabled={uploading || running}
-			on:click={() => fileInput?.click()}
-		>
+	<!-- NARROW SCREEN: SEPARATE PROCESS, DOWNLOAD, AND OTHER-ACTIONS MENUS -->
+	<div class="flex w-full flex-wrap items-center justify-center gap-2 pt-0.5 sm:hidden">
+		<Button variant="secondary" size="sm" disabled={uploading || running} on:click={() => fileInput?.click()}>
 			<Upload size={14} />
 			<span>{uploading ? 'Uploading...' : 'Add Images'}</span>
 		</Button>
 
 		{#if totalPages > 0}
-			{#if running}
-				<Button
-					variant="danger"
-					size="sm"
-					on:click={() => dispatch('cancel')}
-				>
-					<Square size={12} class="fill-current" />
-					<span>Cancel</span>
-				</Button>
-			{:else}
-				<Button
-					variant="primary"
-					size="sm"
-					on:click={() => dispatch('translate')}
-				>
-					<Play size={14} />
-					<span>Translate</span>
-				</Button>
-			{/if}
+			<ActionMenu
+				items={processMenuItems}
+				label="Process options"
+				icon={Play}
+				triggerText="Proses"
+				on:select={(e) => handleMenuAction(e.detail)}
+				class="h-8 border border-[#b23a2e]/20 bg-[#b23a2e]/[0.04] text-[#8f2f27] dark:text-[#e08a63]"
+			/>
+			<ActionMenu
+				items={downloadMenuItems}
+				label="Download options"
+				icon={Download}
+				triggerText="Unduh"
+				on:select={(e) => handleMenuAction(e.detail)}
+				class="h-8 border border-black/10 bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02]"
+			/>
 		{/if}
 
-		<!-- VERTICAL ELLIPSIS POPOVER -->
 		<ActionMenu
-			items={chapterMenuItems}
+			items={otherMenuItems}
+			label="More chapter actions"
 			on:select={(e) => handleMenuAction(e.detail)}
-			class="h-8 w-8 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5"
+			class="h-8 w-8 rounded-lg border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5"
 		/>
 	</div>
-
 	<!-- SECONDARY TOOLBAR: VIEW MODE TABS + WEBTOON CONFIG (CENTERED ON TOP) -->
 	{#if totalPages > 0}
 		<div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 border-y border-black/[0.06] py-2 dark:border-white/[0.06] w-full">

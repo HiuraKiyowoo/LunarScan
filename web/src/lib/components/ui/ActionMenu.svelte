@@ -39,6 +39,8 @@
 	// -- OPTIONAL PROPS -- //
 
 	export let label = 'Actions';
+	export let icon: ComponentType = MoreVertical;
+	export let triggerText: string | null = null;
 	// TRIGGER ICON SIZE (px) — CALLERS BUMP IT WHERE THE KEBAB SITS BESIDE TALLER TEXT.
 	export let iconSize = 16;
 	let className = '';
@@ -149,7 +151,7 @@
 	});
 </script>
 
-<!-- KEBAB TRIGGER (THREE VERTICAL DOTS) -->
+<!-- KEBAB OR LABELED MENU TRIGGER -->
 <button
 	bind:this={triggerEl}
 	type="button"
@@ -158,9 +160,15 @@
 	aria-haspopup="menu"
 	aria-expanded={open}
 	aria-label={label}
-	class={cn('rounded-lg p-1.5 opacity-80 transition-all hover:opacity-100', open && 'opacity-100', className)}
+	class={cn(
+		'rounded-lg opacity-80 transition-all hover:opacity-100',
+		triggerText ? 'inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold' : 'p-1.5',
+		open && 'opacity-100',
+		className,
+	)}
 >
-	<MoreVertical size={iconSize} />
+	<svelte:component this={icon} size={iconSize} />
+	{#if triggerText}<span>{triggerText}</span>{/if}
 </button>
 
 <!-- POPOVER MENU (PORTALED TO body SO THE LIST'S overflow-hidden CAN'T CLIP IT) -->
